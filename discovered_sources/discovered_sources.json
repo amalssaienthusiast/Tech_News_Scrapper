@@ -1,0 +1,52 @@
+[
+  {
+    "url": "https://thenextweb.com",
+    "original_url": "https://thenextweb.com",
+    "type": "web",
+    "name": "TNW | The heart of tech",
+    "verified": true,
+    "discovered_at": "2025-11-23T18:02:31.826275+00:00",
+    "quality_score": 0,
+    "article_count": 0
+  },
+  {
+    "url": "https://techcrunch.com/feed/",
+    "original_url": "https://techcrunch.com",
+    "type": "rss",
+    "name": "TechCrunch | Startup and Technology News",
+    "verified": true,
+    "discovered_at": "2025-11-23T18:02:43.140002+00:00",
+    "quality_score": 0,
+    "article_count": 0
+  },
+  {
+    "url": "https://www.zdnet.com",
+    "original_url": "https://www.zdnet.com",
+    "type": "web",
+    "name": "News and Advice on the World's Latest Innovations | ZDNET",
+    "verified": true,
+    "discovered_at": "2025-11-23T18:03:26.459541+00:00",
+    "quality_score": 0,
+    "article_count": 0
+  },
+  {
+    "url": "https://www.cnet.com/rss/news/",
+    "original_url": "https://www.cnet.com/news/",
+    "type": "rss",
+    "name": "News - CNET",
+    "verified": true,
+    "discovered_at": "2025-11-23T18:04:49.688831+00:00",
+    "quality_score": 0,
+    "article_count": 0
+  },
+  {
+    "url": "https://venturebeat.com",
+    "original_url": "https://venturebeat.com",
+    "type": "web",
+    "name": "VentureBeat | Transformative tech coverage that matters",
+    "verified": true,
+    "discovered_at": "2025-11-26T13:20:40.116477+00:00",
+    "quality_score": 0,
+    "article_count": 0
+  }
+]
