@@ -31,11 +31,11 @@ from datetime import datetime, UTC
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 try:
-    import redis.asyncio as aioredis
+    import redis.asyncio as aioredis #type:ignore
     HAS_REDIS = True
 except ImportError:
     try:
-        import aioredis
+        import aioredis #type:ignore
         HAS_REDIS = True
     except ImportError:
         HAS_REDIS = False
@@ -290,19 +290,20 @@ class RedisCache:
         try:
             key = self._key("seen_urls")
             return await self._redis.sismember(key, self._url_hash(url))
-        except Exception:
+        except Exception as exc:
+            logger.warning("Redis has_seen_url error for '%s': %s", url, exc)
             return False
     
     async def mark_url_seen(self, url: str) -> None:
-        """Mark URL as seen."""
+        """Mark URL as seen in Redis set with automatic TTL expiry."""
         if not self.is_connected:
             return
         
         try:
             key = self._key("seen_urls")
             await self._redis.sadd(key, self._url_hash(url))
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Redis mark_url_seen error for '%s': %s", url, exc)
     
     async def get_seen_count(self) -> int:
         """Get count of seen URLs."""

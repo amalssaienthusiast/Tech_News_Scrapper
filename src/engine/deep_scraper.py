@@ -448,7 +448,8 @@ class ContentExtractor:
                     date = data.get("datePublished") or data.get("dateCreated")
                     if date:
                         return date
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError) as exc:
+                logger.debug("Failed to parse JSON-LD date script: %s", exc)
                 continue
         return None
 
@@ -1061,7 +1062,8 @@ class DeepScraper:
             try:
                 async with session.get(url, timeout=10) as resp:
                     return await resp.text() if resp.status == 200 else None
-            except:
+            except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
+                logger.debug("Direct fetch failed for '%s': %s", url, exc)
                 return None
 
         sources = [try_cache, try_direct]
@@ -1071,7 +1073,8 @@ class DeepScraper:
                 html = await source_func()
                 if html and len(html) > 5000:  # Need substantial HTML
                     return html
-            except:
+            except Exception as exc:
+                logger.debug("Source function '%s' raised: %s", source_func.__name__, exc)
                 continue
 
         return None
@@ -1335,8 +1338,8 @@ class DeepScraper:
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=UTC)
             return dt
-        except Exception:
-            pass
+        except (ValueError, OverflowError, ImportError) as exc:
+            logger.debug("dateutil could not parse date string '%s': %s", date_str, exc)
 
         # Try URL as last resort
         if url:
@@ -1398,8 +1401,8 @@ class DeepScraper:
                 month = int(match.group(2))
                 day = int(match.group(3))
                 return datetime(year, month, day, tzinfo=UTC)
-            except ValueError:
-                pass
+            except ValueError as exc:
+                logger.debug("Invalid date components in URL '%s': %s", url, exc)
         return None
 
     async def analyze_url_deep(self, url: str) -> Optional[Article]:

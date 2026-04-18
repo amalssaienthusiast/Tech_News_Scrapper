@@ -304,7 +304,10 @@ class GoogleCustomSearchClient:
                 api_key = api_key or GOOGLE_API_KEY
                 cse_id = cse_id or GOOGLE_CSE_ID
             except ImportError:
-                pass
+                logger.debug(
+                    "config.settings not found; falling back to environment variables "
+                    "for GOOGLE_API_KEY and GOOGLE_CSE_ID."
+                )
         
         self._api_key = api_key
         self._cse_id = cse_id
@@ -432,8 +435,8 @@ class GoogleCustomSearchClient:
                     published_at = parser.parse(date_str)
                     if published_at.tzinfo is None:
                         published_at = published_at.replace(tzinfo=UTC)
-                except Exception:
-                    pass
+                except (ValueError, OverflowError, ImportError) as exc:
+                    logger.debug("Could not parse date '%s' from search result metadata: %s", date_str, exc)
             
             # Extract source from display link
             source = item.get("displayLink", urlparse(url).netloc)
