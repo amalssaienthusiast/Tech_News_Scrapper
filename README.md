@@ -6,10 +6,11 @@ An enterprise-grade, AI-powered news aggregation system designed to scrape, anal
 
 - **Multi-Source Aggregation**: Scrapes from RSS feeds, Google News, Bing News, NewsAPI, Reddit, Twitter/X, and more
 - **AI-Powered Analysis**: LLM-based summarization, sentiment analysis, and disruption detection using Google Gemini
-- **Anti-Bot Bypass**: Multi-layered bypass system including browser automation, proxy rotation, and stealth techniques
+- **Advanced Anti-Bot Bypass**: High-performance Rust-powered integration and multi-layered bypass system including browser automation, proxy rotation, and stealth techniques
 - **Real-Time Feeds**: WebSocket support for live news updates
 - **Intelligent Deduplication**: Semantic deduplication using MinHash LSH and sentence transformers
-- **Newsletter Generation**: Automated newsletter creation with editorial workflow
+- **Advanced Desktop Dashboard**: State-of-the-art PyQt6 GUI for live metric tracking and visual monitoring
+- **Newsletter Generation & Notifications**: Automated newsletter creation with editorial workflow, plus Telegram, Slack, and Discord integrations
 - **REST API**: FastAPI-based API with authentication and rate limiting
 - **Resilience System**: Auto-healing, health monitoring, and fault tolerance
 
@@ -98,7 +99,7 @@ uvicorn src.api.main:app --reload --port 8000
 
 **GUI Mode:**
 ```bash
-python gui/app.py
+python run_qt.py
 ```
 
 **Basic Scraper:**
