@@ -1,4 +1,4 @@
-# 🚀 Tech News Scraper
+# Tech News Scraper
 
 > **Enterprise-grade, AI-powered news aggregation system** — scrapes, analyzes, and distributes technology news from hundreds of sources in real-time, with a Rust-powered bypass layer, a full-featured PyQt6 desktop dashboard, and a LangGraph-orchestrated newsletter pipeline.
 
@@ -10,31 +10,31 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Project Overview](#-project-overview)
 2. [Feature Summary](#-feature-summary)
 3. [System Architecture](#-system-architecture)
 4. [Module Reference](#-module-reference)
-   - [Sources](#sources---srcscources)
-   - [Engine](#engine---srcengine)
-   - [Bypass System](#bypass-system---srcbypass)
-   - [Intelligence](#intelligence---srcintelligence)
-   - [Feed Generator & Processing](#feed-generator--processing)
-   - [Newsletter Pipeline](#newsletter-pipeline---srcnewsletter)
-   - [Notifications](#notifications---srcnotifications)
-   - [Real-Time Infrastructure](#real-time-infrastructure---srcrealtime)
-   - [Distributed Queue](#distributed-queue---srcqueue)
-   - [Search](#search---srcsearch)
-   - [Resilience System](#resilience-system---srcresilience)
-   - [Monitoring](#monitoring---srcmonitoring)
-   - [Cache & Infrastructure](#cache--infrastructure)
-   - [Security & Compliance](#security--compliance)
-   - [Personalization](#personalization---srcpersonalization)
-   - [Performance](#performance---srcperformance)
-   - [Database Layer](#database-layer)
-   - [REST API](#rest-api---srcapi)
-   - [PyQt6 GUI Dashboard](#pyqt6-gui-dashboard---gui_qt)
+ - [Sources](#sources---srcscources)
+ - [Engine](#engine---srcengine)
+ - [Bypass System](#bypass-system---srcbypass)
+ - [Intelligence](#intelligence---srcintelligence)
+ - [Feed Generator & Processing](#feed-generator--processing)
+ - [Newsletter Pipeline](#newsletter-pipeline---srcnewsletter)
+ - [Notifications](#notifications---srcnotifications)
+ - [Real-Time Infrastructure](#real-time-infrastructure---srcrealtime)
+ - [Distributed Queue](#distributed-queue---srcqueue)
+ - [Search](#search---srcsearch)
+ - [Resilience System](#resilience-system---srcresilience)
+ - [Monitoring](#monitoring---srcmonitoring)
+ - [Cache & Infrastructure](#cache--infrastructure)
+ - [Security & Compliance](#security--compliance)
+ - [Personalization](#personalization---srcpersonalization)
+ - [Performance](#performance---srcperformance)
+ - [Database Layer](#database-layer)
+ - [REST API](#rest-api---srcapi)
+ - [PyQt6 GUI Dashboard](#pyqt6-gui-dashboard---gui_qt)
 5. [Quick Start](#-quick-start)
 6. [Configuration Reference](#-configuration-reference)
 7. [Running the Application](#-running-the-application)
@@ -46,7 +46,7 @@
 
 ---
 
-## 🧠 Project Overview
+## Project Overview
 
 **Tech News Scraper** is a production-grade, modular news intelligence platform that continuously discovers, fetches, analyzes, personalizes, and distributes technology news. It was built across 10 development phases, growing from a basic RSS scraper into a full-stack AI news system.
 
@@ -65,7 +65,7 @@
 
 ---
 
-## ✨ Feature Summary
+## Feature Summary
 
 - **Multi-Source Aggregation** — Fetches from 10+ sources including RSS, Google News RSS + API, Bing News API, NewsAPI.org (70k+ outlets), Reddit (tech subreddits), Twitter/X (Tweepy v2), DuckDuckGo (no API key), and Google Trends.
 - **Advanced Anti-Bot Bypass** — High-performance Rust compiled extension (`advanced_web_scraper`) + TLS fingerprint randomization (JA3 spoofing) via `curl-cffi` + Playwright browser automation for Cloudflare bypass + proxy rotation + fake user-agent rotation.
@@ -87,62 +87,62 @@
 
 ---
 
-## 🏗 System Architecture
+## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                  TECH NEWS SCRAPER v10.0                        │
-├──────────────┬──────────────┬──────────────┬────────────────────┤
-│  CLI TUI     │  FastAPI     │  PyQt6 GUI   │   WebSocket/SSE    │
-│  (cli.py)    │  REST API    │  Dashboard   │   Clients          │
-└──────┬───────┴──────┬───────┴──────┬───────┴────────┬───────────┘
-       └──────────────┴──────────────┴────────────────┘
-                              │
-                              ▼
-          ┌───────────────────────────────────────┐
-          │     TechNewsOrchestrator              │
-          │     (src/engine/orchestrator.py)      │
-          └────────────────┬──────────────────────┘
-                           │
-          ┌────────────────┼────────────────────┐
-          ▼                ▼                    ▼
-   ┌─────────────┐  ┌─────────────┐   ┌──────────────────┐
-   │  Discovery  │  │  DeepScraper│   │  Intelligence     │
-   │  Aggregator │  │  + Bypass   │   │  (LLM/Sentiment)  │
-   │  (10 sources│  │  (Rust+TLS) │   │  (Gemini/Local)   │
-   └──────┬──────┘  └──────┬──────┘   └────────┬─────────┘
-          │                │                    │
-          └────────────────┼────────────────────┘
-                           ▼
-          ┌───────────────────────────────────────┐
-          │  Deduplication Engine (4-layer)       │
-          │  URL → Title Fuzzy → MinHash → Cross  │
-          └───────────────┬───────────────────────┘
-                          ▼
-          ┌───────────────────────────────────────┐
-          │  Database  (SQLite / PostgreSQL)       │
-          │  + Redis Cache + Elasticsearch Index  │
-          └───────────────┬───────────────────────┘
-                          ▼
-          ┌───────────────────────────────────────┐
-          │  Output Layer                         │
-          │  REST API │ WebSocket │ Newsletter    │
-          │  Email Digest │ Slack │ Telegram      │
-          └───────────────────────────────────────┘
+
+ TECH NEWS SCRAPER v10.0 
+
+ CLI TUI FastAPI PyQt6 GUI WebSocket/SSE 
+ (cli.py) REST API Dashboard Clients 
+
+
+
+
+
+ TechNewsOrchestrator 
+ (src/engine/orchestrator.py) 
+
+
+
+
+
+ Discovery DeepScraper Intelligence 
+ Aggregator + Bypass (LLM/Sentiment) 
+ (10 sources (Rust+TLS) (Gemini/Local) 
+
+
+
+
+
+ Deduplication Engine (4-layer) 
+ URL → Title Fuzzy → MinHash → Cross 
+
+
+
+ Database (SQLite / PostgreSQL) 
+ + Redis Cache + Elasticsearch Index 
+
+
+
+ Output Layer 
+ REST API WebSocket Newsletter 
+ Email Digest Slack Telegram 
+
 ```
 
 ### Data Flow
 
 ```
 Sources → Orchestrator → Bypass (if blocked) → DeepScraper
-       → Deduplicator → AI Intelligence (Gemini/Local)
-       → Database → Redis Pub/Sub → WebSocket / SSE / API
-       → Newsletter Pipeline (LangGraph) → Beehiiv / Slack / Email
+ → Deduplicator → AI Intelligence (Gemini/Local)
+ → Database → Redis Pub/Sub → WebSocket / SSE / API
+ → Newsletter Pipeline (LangGraph) → Beehiiv / Slack / Email
 ```
 
 ---
 
-## 📦 Module Reference
+## Module Reference
 
 ### Sources — `src/sources/`
 
@@ -207,7 +207,7 @@ The bypass system is a multi-layered stack for evading anti-bot protections on p
 | `llm_provider.py` | `LLMProvider` | Abstract base class for all LLM backends. Supports `GEMINI`, `LANGCHAIN`, `LOCAL`, and `AUTO` provider types with automatic selection and fallback. |
 | `llm_summarizer.py` | `LLMSummarizer` | Article summarization. Uses Gemini 1.5 Flash for rich summaries; falls back to DistilBART for free local inference. |
 | `disruption_analyzer.py` | `DisruptionAnalyzer` | Market disruption analysis via LLM structured output. Returns `DisruptionAnalysis` (Pydantic model) with: `disruptive` (bool), `criticality` (1–10), `justification`, `affected_markets`, `affected_companies`, `sentiment`. |
-| `sentiment_analyzer.py` | `SentimentAnalyzer` | Five-tier sentiment scoring: `VERY_POSITIVE 🚀`, `POSITIVE 📈`, `NEUTRAL ➖`, `NEGATIVE 📉`, `VERY_NEGATIVE 💥`. |
+| `sentiment_analyzer.py` | `SentimentAnalyzer` | Five-tier sentiment scoring: `VERY_POSITIVE `, `POSITIVE `, `NEUTRAL `, `NEGATIVE `, `VERY_NEGATIVE `. |
 | `news_classifier.py` | `NewsClassifier` | 25-category taxonomy classification. Fast local keyword matching with LLM fallback. Categories configurable via YAML. |
 | `alert_engine.py` | `AlertEngine` | Criticality-based alerting (1–10 score → `LOW/MEDIUM/HIGH/CRITICAL`). Supports GUI, Telegram, Discord, and Email channels. Built-in deduplication to suppress repeated alerts. |
 | `custom_rules.py` | `CustomRulesEngine` | User-defined rules for custom filtering, categorization overrides, and alert triggers. |
@@ -248,7 +248,7 @@ The newsletter system uses a **LangGraph** state-machine workflow for end-to-end
 
 ```
 load_stories → editor_selects_stories → writer_drafts_sections
-            → generate_subject_lines → schedule_send → publish
+ → generate_subject_lines → schedule_send → publish
 ```
 
 | Module | Class | Description |
@@ -271,11 +271,11 @@ load_stories → editor_selects_stories → writer_drafts_sections
 | `email_digest.py` | `EmailDigestService` | SMTP email delivery with TLS. Sends HTML email digests styled with **Tokyo Night** theme. Supports personalization by topic subscriptions. Daily/weekly scheduling via APScheduler. |
 
 **Supported Notification Channels (via Alert Engine):**
-- 📧 **Email** — SMTP (Gmail, custom server)
-- 💬 **Telegram** — Bot token + chat ID
-- 🎮 **Discord** — Webhook URL
-- 💼 **Slack** — SDK + workspace token
-- 🖥️ **GUI** — In-app toast / overlay alert
+- **Email** — SMTP (Gmail, custom server)
+- **Telegram** — Bot token + chat ID
+- **Discord** — Webhook URL
+- **Slack** — SDK + workspace token
+- **GUI** — In-app toast / overlay alert
 
 ---
 
@@ -387,8 +387,8 @@ For production deployments, set `DATABASE_URL` in `.env` to switch to PostgreSQL
 
 The FastAPI-based developer API with built-in auth, rate limiting, and OpenAPI documentation.
 
-**Base URL:** `http://localhost:8000`  
-**Docs:** `http://localhost:8000/docs` (Swagger UI)  
+**Base URL:** `http://localhost:8000` 
+**Docs:** `http://localhost:8000/docs` (Swagger UI) 
 **ReDoc:** `http://localhost:8000/redoc`
 
 | Method | Endpoint | Description |
@@ -406,7 +406,7 @@ The FastAPI-based developer API with built-in auth, rate limiting, and OpenAPI d
 | `WS` | `/ws` | WebSocket connection for real-time article push |
 | `GET` | `/events/stream` | SSE stream (WebSocket fallback) |
 
-**Authentication:** API key via `X-API-Key` header.  
+**Authentication:** API key via `X-API-Key` header. 
 **Rate Limiting:** Configured per tier (free/pro/enterprise).
 
 ---
@@ -442,7 +442,7 @@ Dark-themed main window with sidebar navigation, source filter combo box, catego
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -464,7 +464,7 @@ cd Tech_News_Scrapper
 **2. Create a virtual environment:**
 ```bash
 python -m venv env
-source env/bin/activate  # On Windows: env\Scripts\activate
+source env/bin/activate # On Windows: env\Scripts\activate
 ```
 
 **3. Install dependencies:**
@@ -485,79 +485,79 @@ cp .env.example .env
 
 ---
 
-## ⚙️ Configuration Reference
+## Configuration Reference
 
 Create a `.env` file in the project root. All keys are optional unless marked **Required**.
 
 ```env
-# ─────────────────────────────────────────────
+# 
 # GOOGLE (Required for Google News + Search)
-# ─────────────────────────────────────────────
-GOOGLE_API_KEY=AIza...              # Google Custom Search API key
-GOOGLE_CSE_ID=your_cse_id          # Custom Search Engine ID
+# 
+GOOGLE_API_KEY=AIza... # Google Custom Search API key
+GOOGLE_CSE_ID=your_cse_id # Custom Search Engine ID
 
-# ─────────────────────────────────────────────
+# 
 # AI / LLM
-# ─────────────────────────────────────────────
-GEMINI_API_KEY=your_gemini_api_key  # Google Gemini 1.5 Flash
+# 
+GEMINI_API_KEY=your_gemini_api_key # Google Gemini 1.5 Flash
 
-# ─────────────────────────────────────────────
+# 
 # NEWS SOURCES
-# ─────────────────────────────────────────────
-NEWSAPI_KEY=your_newsapi_key        # newsapi.org (free: 100 req/day)
-BING_API_KEY=your_bing_api_key      # Azure Bing News Search v7
-REDDIT_CLIENT_ID=your_client_id     # Reddit API (PRAW)
+# 
+NEWSAPI_KEY=your_newsapi_key # newsapi.org (free: 100 req/day)
+BING_API_KEY=your_bing_api_key # Azure Bing News Search v7
+REDDIT_CLIENT_ID=your_client_id # Reddit API (PRAW)
 REDDIT_CLIENT_SECRET=your_secret
-TWITTER_BEARER_TOKEN=your_token     # Twitter/X API v2 bearer token
-SERPAPI_KEY=your_serpapi_key        # SerpAPI (paid, real-time Google)
+TWITTER_BEARER_TOKEN=your_token # Twitter/X API v2 bearer token
+SERPAPI_KEY=your_serpapi_key # SerpAPI (paid, real-time Google)
 
-# ─────────────────────────────────────────────
+# 
 # NOTIFICATIONS
-# ─────────────────────────────────────────────
-TELEGRAM_BOT_TOKEN=123456:abc...    # Telegram bot token
+# 
+TELEGRAM_BOT_TOKEN=123456:abc... # Telegram bot token
 TELEGRAM_CHAT_ID=your_chat_id
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-SLACK_BOT_TOKEN=xoxb-...            # Slack SDK token
+SLACK_BOT_TOKEN=xoxb-... # Slack SDK token
 
-# ─────────────────────────────────────────────
+# 
 # EMAIL DIGEST
-# ─────────────────────────────────────────────
+# 
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
 SENDER_EMAIL=your@gmail.com
 SENDER_PASSWORD=your_app_password
 
-# ─────────────────────────────────────────────
+# 
 # NEWSLETTER (Beehiiv)
-# ─────────────────────────────────────────────
+# 
 BEEHIIV_API_KEY=your_beehiiv_key
 BEEHIIV_PUBLICATION_ID=your_pub_id
 
-# ─────────────────────────────────────────────
+# 
 # DATABASE
-# ─────────────────────────────────────────────
+# 
 # Default: SQLite (no config needed)
 # DATABASE_URL=postgresql://user:pass@localhost/technews
 
-# ─────────────────────────────────────────────
+# 
 # REDIS (optional)
-# ─────────────────────────────────────────────
+# 
 REDIS_URL=redis://localhost:6379/0
 
-# ─────────────────────────────────────────────
+# 
 # ELASTICSEARCH (optional)
-# ─────────────────────────────────────────────
+# 
 ELASTICSEARCH_URL=http://localhost:9200
 
-# ─────────────────────────────────────────────
+# 
 # API
-# ─────────────────────────────────────────────
-API_KEY=your_secret_api_key         # For REST API authentication
+# 
+API_KEY=your_secret_api_key # For REST API authentication
 ```
 
 ---
 
-## ▶️ Running the Application
+## Running the Application
 
 ### PyQt6 GUI Dashboard
 ```bash
@@ -593,84 +593,84 @@ celery -A src.queue.celery_app beat --loglevel=info
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 tech_news_scraper/
-├── src/
-│   ├── api/                    # FastAPI REST API & WebSocket endpoints
-│   ├── bypass/                 # Anti-bot bypass (Rust extension + TLS + Playwright)
-│   │   └── target/             # Compiled Rust native library
-│   ├── cache/                  # Redis cache layer
-│   ├── compatibility/          # Package shims and RSS adapters
-│   ├── compliance/             # GDPR/CCPA data privacy management
-│   ├── core/                   # Types, protocols, exceptions, events
-│   ├── crawler/                # Link-following web crawler
-│   ├── data_structures/        # Article queue and custom data types
-│   ├── db_storage/             # Async DB, migrations, unified storage
-│   ├── discovery/              # Global source discovery system
-│   ├── engine/                 # Core orchestrator + scraper logic
-│   ├── extraction/             # Content extractors (API sniffer, LLM, Medium)
-│   ├── feed_generator/         # Live feed buffer + deduplicator
-│   ├── infrastructure/         # Redis event bus
-│   ├── intelligence/           # AI/ML: LLM, sentiment, disruption, classifier
-│   ├── monitoring/             # Health checks + Prometheus metrics
-│   ├── newsletter/             # LangGraph newsletter pipeline + Beehiiv publisher
-│   ├── notifications/          # Email digest service
-│   ├── operations/             # Diagnostic toolkit
-│   ├── performance/            # Parallel scraper + LRU cache
-│   ├── personalization/        # User preference-based scoring
-│   ├── processing/             # Multi-method deduplication engine
-│   ├── queue/                  # Celery app + distributed task definitions
-│   ├── realtime/               # WebSocket server + SSE server
-│   ├── resilience/             # Auto-fixer, source health, deprecation manager
-│   ├── scheduler/              # APScheduler task scheduling
-│   ├── scrapers/               # Scraper implementations (RSS, API, Google News, factory)
-│   ├── search/                 # Elasticsearch client + indexer + query builder
-│   ├── security/               # API key manager
-│   ├── sources/                # All source integrations (10+ providers)
-│   ├── user/                   # User preferences model
-│   ├── utils/                  # Shared utilities
-│   ├── database.py             # Main SQLite singleton
-│   ├── discovery.py            # Legacy discovery module
-│   ├── rate_limiter.py         # Global rate limiter
-│   └── scraper.py              # Legacy base scraper
-│
-├── gui_qt/                     # PyQt6 desktop dashboard
-│   ├── app_qt_migrated.py      # Main PyQt6 application window
-│   ├── dialogs/
-│   │   ├── article_viewer.py   # Full article content viewer
-│   │   └── sentiment_dialog.py # Sentiment dashboard dialog
-│   ├── widgets/
-│   │   ├── live_monitor_overlay.py   # Full-screen 7-widget live monitor
-│   │   ├── live_activity_log.py      # Color-coded real-time log
-│   │   ├── live_article_stream.py    # Live article stream panel
-│   │   ├── live_source_monitor.py    # Source heartbeat monitor
-│   │   ├── network_graph.py          # Network throughput bar graph
-│   │   ├── pipeline_visualizer.py    # 6-stage pipeline indicator
-│   │   └── source_activity_matrix.py # Source grid with progress bars
-│   └── theme.py                # Color constants and font definitions
-│
-├── api/                        # Additional API configuration
-├── BOT_setup_telegram/         # Telegram bot setup scripts
-├── config/                     # YAML configuration files
-├── data/                       # SQLite databases
-├── docs/                       # Additional documentation
-├── logs/                       # Application log files
-├── tests/                      # Full test suite (25 test files)
-│
-├── cli.py                      # Interactive TUI (Rich-based)
-├── main.py                     # Headless scraper entry point
-├── run_qt.py                   # PyQt6 GUI launcher
-├── requirements.txt            # All Python dependencies
-├── config.yaml                 # Application configuration
-├── .env.example                # Environment variable template
-└── LICENSE                     # Proprietary license
+ src/
+ api/ # FastAPI REST API & WebSocket endpoints
+ bypass/ # Anti-bot bypass (Rust extension + TLS + Playwright)
+ target/ # Compiled Rust native library
+ cache/ # Redis cache layer
+ compatibility/ # Package shims and RSS adapters
+ compliance/ # GDPR/CCPA data privacy management
+ core/ # Types, protocols, exceptions, events
+ crawler/ # Link-following web crawler
+ data_structures/ # Article queue and custom data types
+ db_storage/ # Async DB, migrations, unified storage
+ discovery/ # Global source discovery system
+ engine/ # Core orchestrator + scraper logic
+ extraction/ # Content extractors (API sniffer, LLM, Medium)
+ feed_generator/ # Live feed buffer + deduplicator
+ infrastructure/ # Redis event bus
+ intelligence/ # AI/ML: LLM, sentiment, disruption, classifier
+ monitoring/ # Health checks + Prometheus metrics
+ newsletter/ # LangGraph newsletter pipeline + Beehiiv publisher
+ notifications/ # Email digest service
+ operations/ # Diagnostic toolkit
+ performance/ # Parallel scraper + LRU cache
+ personalization/ # User preference-based scoring
+ processing/ # Multi-method deduplication engine
+ queue/ # Celery app + distributed task definitions
+ realtime/ # WebSocket server + SSE server
+ resilience/ # Auto-fixer, source health, deprecation manager
+ scheduler/ # APScheduler task scheduling
+ scrapers/ # Scraper implementations (RSS, API, Google News, factory)
+ search/ # Elasticsearch client + indexer + query builder
+ security/ # API key manager
+ sources/ # All source integrations (10+ providers)
+ user/ # User preferences model
+ utils/ # Shared utilities
+ database.py # Main SQLite singleton
+ discovery.py # Legacy discovery module
+ rate_limiter.py # Global rate limiter
+ scraper.py # Legacy base scraper
+
+ gui_qt/ # PyQt6 desktop dashboard
+ app_qt_migrated.py # Main PyQt6 application window
+ dialogs/
+ article_viewer.py # Full article content viewer
+ sentiment_dialog.py # Sentiment dashboard dialog
+ widgets/
+ live_monitor_overlay.py # Full-screen 7-widget live monitor
+ live_activity_log.py # Color-coded real-time log
+ live_article_stream.py # Live article stream panel
+ live_source_monitor.py # Source heartbeat monitor
+ network_graph.py # Network throughput bar graph
+ pipeline_visualizer.py # 6-stage pipeline indicator
+ source_activity_matrix.py # Source grid with progress bars
+ theme.py # Color constants and font definitions
+
+ api/ # Additional API configuration
+ BOT_setup_telegram/ # Telegram bot setup scripts
+ config/ # YAML configuration files
+ data/ # SQLite databases
+ docs/ # Additional documentation
+ logs/ # Application log files
+ tests/ # Full test suite (25 test files)
+
+ cli.py # Interactive TUI (Rich-based)
+ main.py # Headless scraper entry point
+ run_qt.py # PyQt6 GUI launcher
+ requirements.txt # All Python dependencies
+ config.yaml # Application configuration
+ .env.example # Environment variable template
+ LICENSE # Proprietary license
 ```
 
 ---
 
-## 🧪 Test Suite
+## Test Suite
 
 All tests live in `tests/`. Run with:
 
@@ -716,7 +716,7 @@ pytest tests/test_rust_integration.py -v
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 Key dependencies grouped by subsystem:
 
@@ -738,7 +738,7 @@ Key dependencies grouped by subsystem:
 
 ---
 
-## 🗺 Roadmap
+## Roadmap
 
 - [x] Multi-source aggregation (RSS, Google, Bing, NewsAPI, Reddit, Twitter, DDG, Trends)
 - [x] AI-powered analysis (Gemini + local fallback)
@@ -759,7 +759,7 @@ Key dependencies grouped by subsystem:
 
 ---
 
-## 📄 License
+## License
 
 This repository is proprietary. Permission is restricted to viewing the source code for educational purposes. See the [LICENSE](LICENSE) file for complete details.
 
