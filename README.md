@@ -1,1522 +1,766 @@
-# Tech News Scraper - Comprehensive Documentation
+# 🚀 Tech News Scraper
 
-**Version:** 1.0.0  
-**Python Version:** 3.8+  
-**License:** [Add License Information]  
-**Last Updated:** 2026-02-06
+> **Enterprise-grade, AI-powered news aggregation system** — scrapes, analyzes, and distributes technology news from hundreds of sources in real-time, with a Rust-powered bypass layer, a full-featured PyQt6 desktop dashboard, and a LangGraph-orchestrated newsletter pipeline.
 
----
-
-## Executive Summary
-
-Tech News Scraper is an **enterprise-grade, AI-powered news aggregation system** designed to intelligently collect, analyze, and distribute technology news from hundreds of sources. It features sophisticated anti-detection mechanisms, real-time streaming capabilities, and machine learning-based content analysis using Google's Gemini LLM.
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
+[![License](https://img.shields.io/badge/License-Proprietary-red)](LICENSE)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green)](https://fastapi.tiangolo.com)
+[![PyQt6](https://img.shields.io/badge/PyQt6-6.6%2B-purple)](https://pypi.org/project/PyQt6/)
+[![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-orange)](https://ai.google.dev)
 
 ---
 
-## Quick Start
+## 📋 Table of Contents
 
-### Prerequisites
+1. [Project Overview](#-project-overview)
+2. [Feature Summary](#-feature-summary)
+3. [System Architecture](#-system-architecture)
+4. [Module Reference](#-module-reference)
+   - [Sources](#sources---srcscources)
+   - [Engine](#engine---srcengine)
+   - [Bypass System](#bypass-system---srcbypass)
+   - [Intelligence](#intelligence---srcintelligence)
+   - [Feed Generator & Processing](#feed-generator--processing)
+   - [Newsletter Pipeline](#newsletter-pipeline---srcnewsletter)
+   - [Notifications](#notifications---srcnotifications)
+   - [Real-Time Infrastructure](#real-time-infrastructure---srcrealtime)
+   - [Distributed Queue](#distributed-queue---srcqueue)
+   - [Search](#search---srcsearch)
+   - [Resilience System](#resilience-system---srcresilience)
+   - [Monitoring](#monitoring---srcmonitoring)
+   - [Cache & Infrastructure](#cache--infrastructure)
+   - [Security & Compliance](#security--compliance)
+   - [Personalization](#personalization---srcpersonalization)
+   - [Performance](#performance---srcperformance)
+   - [Database Layer](#database-layer)
+   - [REST API](#rest-api---srcapi)
+   - [PyQt6 GUI Dashboard](#pyqt6-gui-dashboard---gui_qt)
+5. [Quick Start](#-quick-start)
+6. [Configuration Reference](#-configuration-reference)
+7. [Running the Application](#-running-the-application)
+8. [Project Structure](#-project-structure)
+9. [Test Suite](#-test-suite)
+10. [Dependencies](#-dependencies)
+11. [Roadmap](#-roadmap)
+12. [License](#-license)
 
-- Python 3.8+
-- pip or poetry
-- (Optional) Redis for real-time features
-- (Optional) Playwright for advanced bypass
+---
 
-### Installation
+## 🧠 Project Overview
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd tech_news_scraper
-   ```
+**Tech News Scraper** is a production-grade, modular news intelligence platform that continuously discovers, fetches, analyzes, personalizes, and distributes technology news. It was built across 10 development phases, growing from a basic RSS scraper into a full-stack AI news system.
 
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+### Key Highlights
 
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+| Capability | Detail |
+|---|---|
+| **Sources** | Google News, Bing News, NewsAPI, Reddit, Twitter/X, DuckDuckGo, Google Trends, RSS Feeds |
+| **AI Analysis** | Google Gemini (via direct API + LangChain), DistilBART local fallback |
+| **Bypass** | Rust-native compiled extension + TLS fingerprint impersonation via `curl-cffi` |
+| **Real-Time** | Redis pub/sub + WebSocket + SSE dual delivery stack |
+| **GUI** | Full PyQt6 dashboard with 7 live monitoring widgets |
+| **Newsletter** | LangGraph-orchestrated AI writing pipeline |
+| **API** | FastAPI REST API with auth, rate limiting, and OpenAPI docs |
+| **Resilience** | Auto-healing source health monitor + deprecation manager |
 
-4. **Install Playwright (optional, for bypass features):**
-   ```bash
-   playwright install
-   ```
+---
 
-5. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
+## ✨ Feature Summary
 
-### Configuration
+- **Multi-Source Aggregation** — Fetches from 10+ sources including RSS, Google News RSS + API, Bing News API, NewsAPI.org (70k+ outlets), Reddit (tech subreddits), Twitter/X (Tweepy v2), DuckDuckGo (no API key), and Google Trends.
+- **Advanced Anti-Bot Bypass** — High-performance Rust compiled extension (`advanced_web_scraper`) + TLS fingerprint randomization (JA3 spoofing) via `curl-cffi` + Playwright browser automation for Cloudflare bypass + proxy rotation + fake user-agent rotation.
+- **AI-Powered Intelligence** — Google Gemini 1.5 Flash for market disruption analysis and news classification. LangChain wrapper for prompt chaining. Local DistilBART fallback for summarization with zero API cost.
+- **25-Category News Classification** — Pre-defined taxonomy covering AI/ML, Cybersecurity, Cloud, Semiconductors, Quantum Computing, Robotics, Fintech, Blockchain, Space Tech, Healthcare, and more.
+- **Sentiment Analysis** — Five-tier scoring (Very Positive → Very Negative) with emoji indicators and trend tracking.
+- **Smart Deduplication** — Four-layer deduplication: exact URL match → fuzzy title similarity (FuzzyWuzzy) → MinHash LSH semantic hashing → cross-source story linking.
+- **PyQt6 Desktop Dashboard** — Full-screen live monitor with 7 composited widgets including network throughput graph, pipeline visualizer, source activity matrix, and real-time article stream.
+- **Newsletter Pipeline** — LangGraph state-machine workflow: `load_stories → editor_selects → writer_drafts → schedule_send`. Publishes to Beehiiv or Slack.
+- **Email Digest** — SMTP-based personalized HTML email digests using Tokyo Night styling, scheduled daily/weekly.
+- **REST API** — FastAPI endpoints for article search, retrieval, analysis, sentiment, and health. Built-in API key authentication and per-tier rate limiting.
+- **Celery Distributed Queue** — Async tasks for source scraping, article analysis, feed refresh, and database maintenance.
+- **Elasticsearch Full-Text Search** — Index creation, article ingestion, and query-builder with graceful fallback when ES is unavailable.
+- **Resilience System** — Source health monitoring (HEALTHY/DEGRADED/UNHEALTHY), auto-fixer for common issues, deprecation manager, and warning orchestrator.
+- **Prometheus Metrics** — Counter, Gauge, and Histogram metrics exposed at `/metrics` in Prometheus text format.
+- **GDPR/CCPA Compliance** — Right-to-be-forgotten, data portability, consent management, and configurable retention policies.
+- **Personalization Engine** — User preference-based article scoring connected to topic subscriptions and watchlists.
+- **Redis Caching** — AI summary caching (saves API costs), rate-limit coordination across workers, pub/sub for live article distribution.
 
-Create a `.env` file in the project root:
+---
 
-```env
-# Required for basic functionality
-GOOGLE_API_KEY=your_google_api_key
-GOOGLE_CSE_ID=your_custom_search_engine_id
+## 🏗 System Architecture
 
-# Optional - for AI features
-GEMINI_API_KEY=your_gemini_api_key
-
-# Optional - for additional sources
-NEWSAPI_KEY=your_newsapi_key
-BING_API_KEY=your_bing_api_key
-REDDIT_CLIENT_ID=your_reddit_client_id
-REDDIT_CLIENT_SECRET=your_reddit_client_secret
-
-# Optional - for notifications
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
-DISCORD_WEBHOOK_URL=your_discord_webhook
-
-# Database (defaults to SQLite)
-# DATABASE_URL=postgresql://user:pass@localhost/technews
-
-# Redis (optional, for real-time features)
-REDIS_URL=redis://localhost:6379/0
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                  TECH NEWS SCRAPER v10.0                        │
+├──────────────┬──────────────┬──────────────┬────────────────────┤
+│  CLI TUI     │  FastAPI     │  PyQt6 GUI   │   WebSocket/SSE    │
+│  (cli.py)    │  REST API    │  Dashboard   │   Clients          │
+└──────┬───────┴──────┬───────┴──────┬───────┴────────┬───────────┘
+       └──────────────┴──────────────┴────────────────┘
+                              │
+                              ▼
+          ┌───────────────────────────────────────┐
+          │     TechNewsOrchestrator              │
+          │     (src/engine/orchestrator.py)      │
+          └────────────────┬──────────────────────┘
+                           │
+          ┌────────────────┼────────────────────┐
+          ▼                ▼                    ▼
+   ┌─────────────┐  ┌─────────────┐   ┌──────────────────┐
+   │  Discovery  │  │  DeepScraper│   │  Intelligence     │
+   │  Aggregator │  │  + Bypass   │   │  (LLM/Sentiment)  │
+   │  (10 sources│  │  (Rust+TLS) │   │  (Gemini/Local)   │
+   └──────┬──────┘  └──────┬──────┘   └────────┬─────────┘
+          │                │                    │
+          └────────────────┼────────────────────┘
+                           ▼
+          ┌───────────────────────────────────────┐
+          │  Deduplication Engine (4-layer)       │
+          │  URL → Title Fuzzy → MinHash → Cross  │
+          └───────────────┬───────────────────────┘
+                          ▼
+          ┌───────────────────────────────────────┐
+          │  Database  (SQLite / PostgreSQL)       │
+          │  + Redis Cache + Elasticsearch Index  │
+          └───────────────┬───────────────────────┘
+                          ▼
+          ┌───────────────────────────────────────┐
+          │  Output Layer                         │
+          │  REST API │ WebSocket │ Newsletter    │
+          │  Email Digest │ Slack │ Telegram      │
+          └───────────────────────────────────────┘
 ```
 
-### Running the Application
+### Data Flow
 
-**CLI Mode:**
-```bash
-python cli.py
+```
+Sources → Orchestrator → Bypass (if blocked) → DeepScraper
+       → Deduplicator → AI Intelligence (Gemini/Local)
+       → Database → Redis Pub/Sub → WebSocket / SSE / API
+       → Newsletter Pipeline (LangGraph) → Beehiiv / Slack / Email
 ```
 
-**API Mode:**
-```bash
-python -m src.api.main
-# Or with uvicorn directly:
-uvicorn src.api.main:app --reload --port 8000
+---
+
+## 📦 Module Reference
+
+### Sources — `src/sources/`
+
+All source integrations implement a unified article format with automatic deduplication and rate-limit management.
+
+| Module | Class | Description |
+|---|---|---|
+| `aggregator.py` | `DiscoveryAggregator` | Single-interface aggregator combining all sources. Handles automatic source selection based on available API keys. |
+| `google_news.py` | `GoogleNewsClient` | 4 strategies: RSS feeds (free, 15-30min delay), Google Custom Search API (100 queries/day free), SerpAPI (real-time, paid), Google Trends for topic discovery. |
+| `bing_news.py` | `BingNewsClient` | Bing News Search API (Azure). Real-time search, trending news, category-based queries. Free tier: 1000 queries/month. |
+| `newsapi_client.py` | `NewsAPIClient` | NewsAPI.org integration. 70,000+ sources. Top headlines by country/category + full-archive search. Free: 100 requests/day. |
+| `reddit_client.py` | `RedditClient` | Fetches trending posts from `r/technology`, `r/programming`, `r/machinelearning`, `r/artificial`, `r/startups`. Supports both PRAW (authenticated) and JSON API (unauthenticated). |
+| `twitter_client.py` | `TwitterClient` | Twitter/X API v2 via Tweepy. App-only bearer token auth. Rate limit: 450 requests/15min for recent search. |
+| `duckduckgo_search.py` | `DuckDuckGoClient` | No API key required. Uses `ddgs` library with exponential backoff to avoid 202 rate-limit errors. |
+| `google_trends.py` | `GoogleTrendsClient` | `pytrends` integration for discovering trending tech topics and related query expansion. |
+| `reddit_stream.py` | `RedditStream` | Real-time Reddit streaming for continuous updates. |
+| `streaming_client.py` | `StreamingClient` | Generic streaming interface for continuous source monitoring. |
+
+---
+
+### Engine — `src/engine/`
+
+| Module | Class | Description |
+|---|---|---|
+| `orchestrator.py` | `TechNewsOrchestrator` | Central coordinator. Manages all scraping operations, schedules source fetches, and routes articles through the full pipeline. |
+| `deep_scraper.py` | `DeepScraper` | Multi-layer content extractor with built-in rate limiting, retry logic, and cache integration. Falls back through extraction methods. |
+| `url_analyzer.py` | `URLAnalyzer` / `QueryEngine` | Query intent classification and tech-relevance scoring. Filters out non-tech URLs before full scraping. |
+| `quality_filter.py` | `QualityFilter` | Post-processing filter to score article quality before storage. |
+| `quantum_scraper.py` | `QuantumScraper` | Experimental high-concurrency parallelized scraper variant. |
+| `conscious_filter.py` | `ConsciousFilter` | Context-aware content filtering with configurable rules. |
+| `realtime_feeder.py` | `RealtimeFeeder` | Continuous live feed pusher that routes new articles to Redis pub/sub and connected clients. |
+| `enhanced_feeder.py` | `EnhancedFeeder` | Extended feeder with additional pre-processing and enrichment steps. |
+| `directory_scraper.py` | `DirectoryScraper` | Scraper for directory-style pages with CSS-selector driven extraction. |
+| `scrape_queue.py` | `ScrapeQueue` | Internal async queue for managing in-flight scrape tasks. |
+| `time_engine.py` | `TimeEngine` | Temporal scheduling engine for coordinating timed scrape intervals. |
+
+---
+
+### Bypass System — `src/bypass/`
+
+The bypass system is a multi-layered stack for evading anti-bot protections on paywalled and bot-detecting sites.
+
+| Module | Description |
+|---|---|
+| `advanced_bypass.py` | High-level orchestrator that selects the appropriate bypass strategy (Rust, TLS, Playwright, or fallback). |
+| `tls_client.py` | **TLS Fingerprint Randomization** — Uses `curl-cffi` to impersonate Chrome/Firefox/Safari TLS signatures. Evades JA3-based bot detection. Supports HTTP/2, cookie jars, async sessions, and automatic browser rotation. |
+| `target/` (Rust) | **Compiled Rust Extension** — `advanced_web_scraper` native library compiled via `maturin`. Provides maximum-performance, low-level HTTP scraping with zero Python overhead. Distributed as a macOS `.dylib` + Python `.whl`. |
+
+**Bypass Strategies (in priority order):**
+1. Rust native extension (fastest, lowest detection fingerprint)
+2. TLS fingerprint impersonation via `curl-cffi`
+3. Playwright browser automation (for Cloudflare/JS challenges)
+4. Proxy rotation + fake user-agent headers
+5. Standard `aiohttp` (fallback)
+
+---
+
+### Intelligence — `src/intelligence/`
+
+| Module | Class | Description |
+|---|---|---|
+| `llm_provider.py` | `LLMProvider` | Abstract base class for all LLM backends. Supports `GEMINI`, `LANGCHAIN`, `LOCAL`, and `AUTO` provider types with automatic selection and fallback. |
+| `llm_summarizer.py` | `LLMSummarizer` | Article summarization. Uses Gemini 1.5 Flash for rich summaries; falls back to DistilBART for free local inference. |
+| `disruption_analyzer.py` | `DisruptionAnalyzer` | Market disruption analysis via LLM structured output. Returns `DisruptionAnalysis` (Pydantic model) with: `disruptive` (bool), `criticality` (1–10), `justification`, `affected_markets`, `affected_companies`, `sentiment`. |
+| `sentiment_analyzer.py` | `SentimentAnalyzer` | Five-tier sentiment scoring: `VERY_POSITIVE 🚀`, `POSITIVE 📈`, `NEUTRAL ➖`, `NEGATIVE 📉`, `VERY_NEGATIVE 💥`. |
+| `news_classifier.py` | `NewsClassifier` | 25-category taxonomy classification. Fast local keyword matching with LLM fallback. Categories configurable via YAML. |
+| `alert_engine.py` | `AlertEngine` | Criticality-based alerting (1–10 score → `LOW/MEDIUM/HIGH/CRITICAL`). Supports GUI, Telegram, Discord, and Email channels. Built-in deduplication to suppress repeated alerts. |
+| `custom_rules.py` | `CustomRulesEngine` | User-defined rules for custom filtering, categorization overrides, and alert triggers. |
+
+**25 Built-in News Categories:**
+
+| Group | Categories |
+|---|---|
+| Core Technology | Technology & Innovation, Artificial Intelligence, Machine Learning, Cybersecurity, Cloud Computing |
+| Software & Platforms | Enterprise Software, Developer Tools, Open Source |
+| Hardware & Infrastructure | Semiconductors, Consumer Electronics, Telecommunications |
+| Emerging Tech | Quantum Computing, Robotics & Automation, AR/VR (Metaverse), Autonomous Vehicles, Space Tech |
+| Finance & Business | Fintech & Payments, Blockchain/Crypto, Startups & Funding, Big Tech (FAANG+) |
+| Vertical Markets | Healthcare Tech, Gov Tech, EdTech, SustainTech |
+
+---
+
+### Feed Generator & Processing
+
+| Module | Class | Description |
+|---|---|---|
+| `src/feed_generator/deduplicator.py` | `FeedDeduplicator` | Four-layer article deduplication: exact URL → fuzzy title (FuzzyWuzzy Levenshtein) → MinHash LSH semantic hash → cross-source story linking. |
+| `src/feed_generator/live_feed.py` | `LiveFeed` | Manages the active article feed buffer for live clients. |
+| `src/processing/deduplication.py` | `DeduplicationEngine` | Deep deduplication engine with cross-source canonical version selection. |
+| `src/crawler/crawler.py` | `WebCrawler` | Link-following crawler for deep article discovery. |
+| `src/crawler/enhanced_crawler.py` | `EnhancedCrawler` | Crawler with JavaScript rendering support and DOM extraction. |
+| `src/crawler/link_extractor.py` | `LinkExtractor` | Extracts and filters article URLs from crawled pages. |
+| `src/extraction/api_sniffer.py` | `APISniffer` | Detects hidden API endpoints on paywalled sites for direct JSON extraction. |
+| `src/extraction/llm_content_extractor.py` | `LLMContentExtractor` | Uses LLM to extract article content from complex DOM structures. |
+| `src/extraction/medium_extractor.py` | `MediumExtractor` | Specialized extractor for Medium.com articles. |
+| `src/extraction/multi_source_reconstructor.py` | `MultiSourceReconstructor` | Reconstructs full article from multiple partial source extractions. |
+
+---
+
+### Newsletter Pipeline — `src/newsletter/`
+
+The newsletter system uses a **LangGraph** state-machine workflow for end-to-end AI-drafted newsletter generation.
+
+```
+load_stories → editor_selects_stories → writer_drafts_sections
+            → generate_subject_lines → schedule_send → publish
 ```
 
-**GUI Mode:**
+| Module | Class | Description |
+|---|---|---|
+| `workflow.py` | `NewsletterWorkflow` | LangGraph `StateGraph` orchestrating the full pipeline. Uses `MemorySaver` for checkpoint resumption. |
+| `state.py` | `NewsletterState` | Typed state model (`StorySelection`, `target_date`, draft sections, subject lines). |
+| `editor.py` | `NewsletterEditor` | LLM-powered editorial selector. Ranks top stories by disruption score, sentiment, and diversity. |
+| `writer.py` | `NewsletterWriter` | Generates structured newsletter sections (`headline`, `body`, `key_insight`) and subject lines via `LLMProvider`. Output: "Tech Intelligence Daily". |
+| `scheduler.py` | `NewsletterScheduler` | APScheduler-based scheduling for daily/weekly automated sends. |
+| `slack.py` | `SlackApprovalWorkflow` | Sends draft to a Slack channel for human approval before publishing via Slack SDK. |
+| `state.py` | — | State types and `create_initial_state` factory. |
+| `publishers/beehiiv.py` | `BeehiivPublisher` | Beehiiv REST API v2 integration. Creates draft posts, schedules sends, retrieves publication stats. |
+
+---
+
+### Notifications — `src/notifications/`
+
+| Module | Class | Description |
+|---|---|---|
+| `email_digest.py` | `EmailDigestService` | SMTP email delivery with TLS. Sends HTML email digests styled with **Tokyo Night** theme. Supports personalization by topic subscriptions. Daily/weekly scheduling via APScheduler. |
+
+**Supported Notification Channels (via Alert Engine):**
+- 📧 **Email** — SMTP (Gmail, custom server)
+- 💬 **Telegram** — Bot token + chat ID
+- 🎮 **Discord** — Webhook URL
+- 💼 **Slack** — SDK + workspace token
+- 🖥️ **GUI** — In-app toast / overlay alert
+
+---
+
+### Real-Time Infrastructure — `src/realtime/`
+
+| Module | Class | Description |
+|---|---|---|
+| `websocket_server.py` | `WebSocketServer` | Push-based news delivery over WebSocket. Connection management, heartbeat, Redis pub/sub integration, message batching. Supports auto-reconnection. |
+| `sse_server.py` | `SSEServer` | Server-Sent Events fallback for clients that don't support WebSocket. JSON event format, heartbeat keep-alive, per-channel filtering. Endpoint: `GET /events/stream` |
+| `src/infrastructure/redis_event_bus.py` | `RedisEventBus` | Redis pub/sub event bus. Publishers (scrapers) → Redis channels → Subscribers (WebSocket/SSE servers). Channel schema: `news:all`, `news:breaking`, `news:topic:{name}`, `news:source:{id}`. |
+
+---
+
+### Distributed Queue — `src/queue/`
+
+| Module | Description |
+|---|---|
+| `celery_app.py` | Celery factory configured with Redis broker. Start worker: `celery -A src.queue.celery_app worker`. Start beat: `celery -A src.queue.celery_app beat`. Gracefully degrades if Celery is not installed. |
+| `tasks.py` | Task definitions: source scraping per-source, deep article analysis, feed refresh, and database maintenance/cleanup. |
+
+---
+
+### Search — `src/search/`
+
+| Module | Class | Description |
+|---|---|---|
+| `elastic_client.py` | `ElasticsearchClient` | Elasticsearch 8.x client. Article index creation with proper mappings, ingestion, and search. Falls back gracefully when ES is unavailable. |
+| `indexer.py` | `ArticleIndexer` | Manages incremental article indexing into Elasticsearch. |
+| `query_builder.py` | `QueryBuilder` | Builds structured ES queries from natural language search parameters. |
+
+---
+
+### Resilience System — `src/resilience/`
+
+| Module | Class | Description |
+|---|---|---|
+| `source_health.py` | `SourceHealthMonitor` | Tracks per-source success rate, average response time, consecutive failures, and articles per fetch. States: `HEALTHY`, `DEGRADED`, `UNHEALTHY`, `UNKNOWN`. |
+| `auto_fixer.py` | `AutoFixer` | Self-healing system. Detects common issues (import errors, config drift, stale sources) and applies automated fixes. Issues classified by `IssueSeverity`: CRITICAL/HIGH/MEDIUM/LOW. |
+| `deprecation_manager.py` | `DeprecationManager` | Tracks deprecated dependencies and APIs, emits warnings, and schedules replacements. |
+| `warning_orchestrator.py` | `WarningOrchestrator` | Aggregates warnings from all subsystems and forwards to the alert engine based on severity thresholds. |
+
+---
+
+### Monitoring — `src/monitoring/`
+
+| Module | Class | Description |
+|---|---|---|
+| `health_check_endpoints.py` | `HealthChecker` | Liveness (`GET /health`), readiness (`GET /health/readiness`), and detailed component-level health (`GET /health/detailed`) checks covering database, Redis, external APIs, and system resources via `psutil`. |
+| `metrics_collector.py` | `MetricsCollector` | Prometheus-style metrics: Counter (request totals, errors), Gauge (queue sizes, active workers), Histogram (latencies). Custom metrics: LLM API cost, articles per source. Exported at `GET /metrics`. |
+| `logging_configuration.py` | — | Centralized structured logging configuration for all subsystems. |
+
+---
+
+### Cache & Infrastructure
+
+| Module | Class | Description |
+|---|---|---|
+| `src/cache/redis_cache.py` | `RedisCache` | AI summary caching (saves Gemini API costs), rate-limit coordination across workers, pub/sub for real-time article distribution, TTL-based expiration. |
+| `src/db_storage/async_database.py` | `AsyncDatabase` | Async SQLite/PostgreSQL wrapper built on `aiosqlite`. |
+| `src/db_storage/db_handler.py` | `DBHandler` | Synchronous database handler for compatibility with non-async contexts. |
+| `src/db_storage/unified_storage.py` | `UnifiedStorage` | Abstraction layer supporting both SQLite (dev) and PostgreSQL (production). |
+| `src/db_storage/migration.py` | `MigrationManager` | Schema versioning and database migration utilities. |
+| `src/db_storage/ephemeral_store.py` | `EphemeralStore` | In-memory temporary storage for short-lived article states during pipeline processing. |
+| `src/scheduler/task_scheduler.py` | `TaskScheduler` | APScheduler-based cron and interval-based scheduling for all periodic jobs. |
+
+---
+
+### Security & Compliance
+
+| Module | Class | Description |
+|---|---|---|
+| `src/security/api_key_manager.py` | `SecureAPIKeyManager` | Secure API key loading from environment. Format validation via regex for: Google, Gemini, OpenAI, NewsAPI, Bing, SerpAPI, Reddit, Telegram, Discord. Safe masking for logs. |
+| `src/compliance/data_privacy_manager.py` | `DataPrivacyManager` | GDPR/CCPA compliance: right-to-be-forgotten (Art. 17), data portability (Art. 20), configurable retention policies, consent management. |
+| `src/compliance/data_anonymization.py` | `DataAnonymizer` | PII scrubbing and data anonymization utilities for exported datasets. |
+
+---
+
+### Personalization — `src/personalization/`
+
+| Module | Class | Description |
+|---|---|---|
+| `engine.py` | `PersonalizationEngine` | Content-based recommendation scoring. Connects `UserPreferences` (topic subscriptions, watchlists, interests) to article relevance scoring and ranked feed filtering. |
+| `src/user/preferences.py` | `UserPreferences` | User profile model with subscribed topics, blocked sources, keyword watchlists, and preferred categories. |
+
+---
+
+### Performance — `src/performance/`
+
+| Module | Class | Description |
+|---|---|---|
+| `parallel_scraper.py` | `ParallelScraper` | `asyncio` + `aiohttp` concurrent HTTP scraper with configurable concurrency (default: 50 simultaneous requests), connection pooling, retry with exponential backoff, and compression support (Brotli). |
+| `cache.py` | `PerformanceCache` | In-process LRU cache layer for frequently accessed articles and processed results. |
+
+---
+
+### Database Layer
+
+| File | Description |
+|---|---|
+| `src/database.py` | Main `Database` class — SQLite singleton providing primary article persistence. Auto-creates schema on first run. Thread-safe with WAL mode. |
+| `data/tech_news.db` | Production SQLite database file. |
+| `live_feed.db` | Live feed database (real-time article buffer). |
+
+For production deployments, set `DATABASE_URL` in `.env` to switch to PostgreSQL.
+
+---
+
+### REST API — `src/api/`
+
+The FastAPI-based developer API with built-in auth, rate limiting, and OpenAPI documentation.
+
+**Base URL:** `http://localhost:8000`  
+**Docs:** `http://localhost:8000/docs` (Swagger UI)  
+**ReDoc:** `http://localhost:8000/redoc`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/articles` | List articles with filters (source, category, date range, sentiment) |
+| `POST` | `/api/v1/search` | Full-text article search |
+| `POST` | `/api/v1/analyze` | Analyze and enrich a specific URL on demand |
+| `GET` | `/api/v1/sentiment` | Aggregate sentiment statistics |
+| `GET` | `/api/v1/categories` | List all categories with article counts |
+| `GET` | `/api/v1/sources` | List monitored sources with health status |
+| `GET` | `/health` | Basic liveness probe |
+| `GET` | `/health/readiness` | Readiness probe (checks DB, Redis) |
+| `GET` | `/health/detailed` | Full component health breakdown |
+| `GET` | `/metrics` | Prometheus metrics export |
+| `WS` | `/ws` | WebSocket connection for real-time article push |
+| `GET` | `/events/stream` | SSE stream (WebSocket fallback) |
+
+**Authentication:** API key via `X-API-Key` header.  
+**Rate Limiting:** Configured per tier (free/pro/enterprise).
+
+---
+
+### PyQt6 GUI Dashboard — `gui_qt/`
+
+Full-featured native desktop application built with PyQt6. Launch with:
 ```bash
 python run_qt.py
 ```
 
-**Basic Scraper:**
-```bash
-python main.py
-```
+#### Main Window — `gui_qt/app_qt_migrated.py`
+Dark-themed main window with sidebar navigation, source filter combo box, category tabs, and article list panel. Includes Apple Silicon multi-threading fix (`import numpy` before Qt).
 
+#### Widgets — `gui_qt/widgets/`
 
+| Widget | Description |
+|---|---|
+| `live_monitor_overlay.py` | **Full-screen live monitor overlay (v8.0).** Composites 7 sub-widgets in a single QDialog: source heartbeat, article stream, activity log, statistics panel (8 metrics + trend arrows), pipeline visualizer, source matrix, network graph. |
+| `live_activity_log.py` | Real-time color-coded log display. Levels: DEBUG (grey), INFO (blue), SUCCESS (green), WARNING (amber), ERROR (red). With timestamps, icons, auto-scroll, and max-entry limit. |
+| `pipeline_visualizer.py` | 6-stage horizontal pipeline: `Discovery → Fetch → Process → Score → Filter → Display`. Visual progress indicators with color coding for active/completed stages. Animated transitions. |
+| `source_activity_matrix.py` | Grid of all news sources with per-source progress bars, pulsing activity dot indicators, and success/failure counters. |
+| `network_graph.py` | Real-time network throughput bar graph. Gradient-colored bars with live throughput metrics. PyQt6 `QPainter`-rendered. |
+| `live_article_stream.py` | Scrollable live article stream preview panel with article cards and highlight animations. |
+| `live_source_monitor.py` | Heartbeat-style source status monitor. Shows last-fetch time and health state for each source. |
 
-## Table of Contents
+#### Dialogs — `gui_qt/dialogs/`
 
-1. [System Architecture](#system-architecture)
-2. [Core Components](#core-components)
-3. [Data Flow](#data-flow)
-4. [Configuration](#configuration)
-5. [API Reference](#api-reference)
-6. [Data Structures](#data-structures)
-7. [Bypass System](#bypass-system)
-8. [Deployment](#deployment)
-9. [Troubleshooting](#troubleshooting)
-10. [Development Guide](#development-guide)
-
----
-
-## System Architecture
-
-### High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           TECH NEWS SCRAPER ARCHITECTURE                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                               │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    │
-│  │   CLI TUI   │    │  FastAPI    │    │  C++ Qt GUI │    │  WebSocket  │    │
-│  │   (cli.py)  │    │   Server    │    │  (gui_qt/)  │    │   Clients   │    │
-│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘    └──────┬──────┘    │
-│         └────────────────────┴────────────────────┴────────────────┘          │
-│                              │                                                │
-│                              ▼                                                │
-│  ┌──────────────────────────────────────────────────────────────────────┐    │
-│  │              TECH NEWS ORCHESTRATOR (src/engine/orchestrator.py)      │    │
-│  │                  Central coordination layer                            │    │
-│  └──────────────────────────────┬───────────────────────────────────────┘    │
-│                                 │                                             │
-│         ┌───────────────────────┼───────────────────────┐                     │
-│         ▼                       ▼                       ▼                     │
-│  ┌─────────────┐        ┌─────────────┐        ┌─────────────┐               │
-│  │QueryEngine  │        │ DeepScraper │        │URLAnalyzer  │               │
-│  │ (Intent     │        │ (Multi-layer│        │ (Deep link  │               │
-│  │  Analysis)  │        │  extraction)│        │  analysis)  │               │
-│  └──────┬──────┘        └──────┬──────┘        └─────────────┘               │
-│         │                      │                                              │
-│         ▼                      ▼                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐    │
-│  │                       BYPASS SYSTEM (src/bypass/)                      │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐ │    │
-│  │  │AntiBotBypass│  │ContentPlatf │  │PaywallBypass│  │ ProxyManager │ │    │
-│  │  │             │  │ormBypass    │  │             │  │              │ │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └──────────────┘ │    │
-│  └──────────────────────────────────────────────────────────────────────┘    │
-│                                 │                                             │
-│                                 ▼                                             │
-│  ┌──────────────────────────────────────────────────────────────────────┐    │
-│  │                   DATA STRUCTURES (src/data_structures/)               │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐ │    │
-│  │  │ PriorityQueue│  │BloomFilter  │  │   LRUCache  │  │   Trie       │ │    │
-│  │  │(Scheduling) │  │(Deduplicatn)│  │(Response   │  │(Keyword      │ │    │
-│  │  │             │  │             │  │  caching)   │  │ matching)    │ │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └──────────────┘ │    │
-│  └──────────────────────────────────────────────────────────────────────┘    │
-│                                 │                                             │
-│                                 ▼                                             │
-│  ┌──────────────────────────────────────────────────────────────────────┐    │
-│  │                         DATABASE LAYER                                 │    │
-│  │              SQLite (default) / PostgreSQL (production)                │    │
-│  └──────────────────────────────────────────────────────────────────────┘    │
-│                                                                               │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Technology Stack
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **HTTP Client** | `aiohttp` | Async HTTP requests |
-| **HTML Parsing** | `beautifulsoup4` | Content extraction |
-| **RSS Parsing** | `feedparser` | RSS/Atom feed handling |
-| **Browser Automation** | `playwright` | Anti-bot bypass |
-| **Web Framework** | `fastapi` | REST API |
-| **AI/ML** | `google-generativeai` | LLM summarization |
-| **Database** | `sqlite3` / `asyncpg` | Data persistence |
-| **Rate Limiting** | Token Bucket | Request throttling |
-| **Serialization** | `pydantic` | Data validation |
+| Dialog | Description |
+|---|---|
+| `article_viewer.py` | Full article content viewer. Displays complete article content with formatting, metadata (source, date, category, sentiment), and an "Open in Browser" button via `QDesktopServices`. |
+| `sentiment_dialog.py` | Sentiment Dashboard dialog. Charts and statistics showing sentiment distribution across all fetched articles. Tabbed view with category breakdown and trend visualization. |
 
 ---
 
-## Core Components
-
-### 1. TechNewsOrchestrator (`src/engine/orchestrator.py`)
-
-**Purpose:** Central coordination layer for all scraping operations.
-
-**Key Responsibilities:**
-- Query understanding and validation
-- Multi-source deep scraping coordination
-- URL analysis and ranking
-- Source priority management
-- Result aggregation and ranking
-
-**Initialization Parameters:**
-```python
-TechNewsOrchestrator(
-    enable_cache: bool = True,          # Enable HTTP response caching
-    max_concurrent_scrapes: int = 5,    # Max parallel scraping operations
-)
-```
-
-**Core Methods:**
-- `search(query: str) -> SearchResult` - Main search interface
-- `analyze_url(url: str) -> URLAnalysisResult` - Deep URL analysis
-- `get_feed_status() -> FeedStatus` - Real-time feed monitoring
-
-**Source Tier System:**
-- **Tier 1** (Priority 0.25): Premium sources (TechCrunch, The Verge, Ars Technica, Wired, MIT Tech Review)
-- **Tier 2** (Priority 0.50): High-quality sources (Hacker News, Engadget, Gizmodo, VentureBeat, ZDNet)
-- **Tier 3** (Priority 0.75): Medium-quality sources
-- **Tier 4** (Priority 1.00): Discovered/unverified sources
-
-### 2. DeepScraper (`src/engine/deep_scraper.py`)
-
-**Purpose:** Advanced multi-layer content extraction engine.
-
-**Architecture:**
-- **NO RSS SUPPORT** - Direct web scraping only
-- Multi-layer link discovery algorithm
-- Content quality scoring
-- Source reputation tracking
-- Async batch processing with rate limiting
-
-**Key Classes:**
-
-#### ContentExtractor
-Intelligent HTML content extraction with:
-- Paywall detection (returns None if content restricted)
-- Sidebar/Related Post noise removal
-- Density-based extraction
-- Priority-ordered content selectors
-
-**Content Selectors (Priority Order):**
-```python
-CONTENT_SELECTORS = [
-    '[itemprop="articleBody"]',        # Schema.org markup
-    '[property="articleBody"]',        # Open Graph
-    'article .content',                 # Generic article
-    'article .post-content',            # WordPress
-    '[data-testid="postContent"]',     # Medium-specific
-    'article[data-testid="postArticle"]',
-    '.postArticle-content',
-    'article',                           # Fallback
-    '[role="main"]',                   # ARIA main
-    'main',                              # HTML5 main
-]
-```
-
-**Remove Selectors (Noise Reduction):**
-```python
-REMOVE_SELECTORS = [
-    'script', 'style', 'noscript', 'iframe',
-    'nav', 'header', 'footer', 'aside',
-    '.advertisement', '.ad-slot', '.ads',
-    '.social-share', '.share-buttons',
-    '.comments', '.comment-section',
-    '.related-posts', '.sidebar', '.widget',
-    '.newsletter', '.subscription',
-]
-```
-
-**Paywall Detection Indicators:**
-- "subscribe to read"
-- "subscribe to continue"
-- "log in to continue"
-- "premium content"
-- "this article is for subscribers only"
-
-### 3. QueryEngine (`src/engine/query_engine.py`)
-
-**Purpose:** Intelligent query analysis and intent classification.
-
-**Features:**
-- Intent classification (search, analyze, discover, reject)
-- Tech relevance scoring using ML and keyword matching
-- Query expansion with synonyms and related terms
-- Strict non-tech content rejection
-
-**Query Types:**
-```python
-class QueryType(Enum):
-    KEYWORD_SEARCH = auto()      # General tech keyword search
-    URL_ANALYSIS = auto()        # Analyze specific URL
-    SOURCE_DISCOVERY = auto()    # Find new sources
-    TRENDING = auto()            # Get trending topics
-    HELP = auto()                # Help/usage query
-    UNKNOWN = auto()             # Cannot classify
-```
-
-**Tech Relevance Scoring:**
-- Uses Trie-based TechKeywordMatcher for O(m) keyword lookup
-- Tech threshold: 0.1 (configurable, lowered from 0.3)
-- Non-tech indicators block queries (recipes, weather, sports, etc.)
-
-**Tech Synonyms for Query Expansion:**
-```python
-TECH_SYNONYMS = {
-    "ai": ["artificial intelligence", "machine learning", "deep learning"],
-    "llm": ["large language model", "gpt", "chatgpt", "language model"],
-    "ml": ["machine learning", "ai", "neural networks"],
-    "programming": ["coding", "software development", "development"],
-    "cybersecurity": ["security", "infosec", "cyber security", "hacking"],
-    "cloud": ["cloud computing", "aws", "azure", "gcp"],
-    "blockchain": ["crypto", "web3", "decentralized"],
-}
-```
-
-### 4. TechNewsScraper (`src/scraper.py`)
-
-**Purpose:** Main scraper module for RSS feeds and web pages.
-
-**Features:**
-- Async-capable web scraping (aiohttp)
-- Concurrent HTTP requests with rate limiting
-- Intelligent retry logic with exponential backoff
-- Both RSS/Atom feeds and HTML page scraping
-
-**Rate Limiting:**
-```python
-RATE_LIMIT_TOKENS_PER_SECOND = 2.0  # Refill rate
-RATE_LIMIT_BUCKET_SIZE = 10         # Max burst capacity
-SOURCE_SCRAPE_DELAY = 2.0          # Delay between sources
-ARTICLE_SCRAPE_DELAY = 1.0         # Delay between articles
-```
-
-**Retry Logic:**
-- Max retries: 3
-- Initial delay: 5 seconds
-- Exponential backoff (doubles each retry)
-- Status 429 (rate limited): Wait 2x delay
-
----
-
-## Data Flow
-
-### Standard Scraping Flow
-
-```
-┌─────────────────┐
-│  User Query or  │
-│  Scheduled Job  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  QueryEngine    │────▶│  Intent Class.  │
-│  (Validation)   │     └─────────────────┘
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  DeepScraper    │────▶│  Rate Limiter   │
-│  (URL Fetch)    │     │  (Token Bucket) │
-└────────┬────────┘     └─────────────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  Anti-Bot       │────▶│  Playwright/    │
-│  Detection?     │     │  Stealth Mode   │
-└────────┬────────┘     └─────────────────┘
-         │ No
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  Paywall        │────▶│  Content Platf. │
-│  Detected?      │     │  Bypass         │
-└────────┬────────┘     │  (Medium/etc)   │
-         │ No           └─────────────────┘
-         ▼
-┌─────────────────┐
-│ ContentExtractor│
-│ (HTML Parsing)  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  AI Processor   │────▶│  Google Gemini  │
-│  (Summarization)│     │  LLM API        │
-└────────┬────────┘     └─────────────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  BloomFilter    │────▶│  MinHash LSH    │
-│  (Deduplication)│     │  (Semantic)     │
-└────────┬────────┘     └─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│   Database      │
-│  (SQLite/PG)    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  API/Newsletter │────▶│  FastAPI/       │
-│  Distribution   │     │  WebSocket      │
-└─────────────────┘     └─────────────────┘
-```
-
-### Real-Time Feed Flow
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    REAL-TIME FEED PIPELINE                   │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌─────────────┐                                            │
-│  │  Scheduler  │  Triggers every CHECK_INTERVAL (3600s)     │
-│  └──────┬──────┘                                            │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
-│  │   Source    │───▶│   Source    │───▶│   Source    │      │
-│  │   Queue     │    │   Queue     │    │   Queue     │      │
-│  │ (Priority)  │    │ (Priority)  │    │ (Priority)  │      │
-│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘      │
-│         │                  │                  │             │
-│         └──────────────────┴──────────────────┘             │
-│                            │                                │
-│                            ▼                                │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              ASYNC GATHER (max 5 concurrent)          │  │
-│  └────────────────────────┬─────────────────────────────┘  │
-│                           │                                 │
-│         ┌─────────────────┼─────────────────┐               │
-│         ▼                 ▼                 ▼               │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │
-│  │   Article   │   │   Article   │   │   Article   │       │
-│  │   Fetch     │   │   Fetch     │   │   Fetch     │       │
-│  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘       │
-│         │                 │                 │              │
-│         └─────────────────┼─────────────────┘              │
-│                           │                                 │
-│                           ▼                                 │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              PROCESSING PIPELINE                      │  │
-│  │  Extract → AI Summary → Deduplicate → Store          │  │
-│  └────────────────────────┬─────────────────────────────┘  │
-│                           │                                 │
-│                           ▼                                 │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              EVENT BROADCAST (WebSocket)              │  │
-│  │  Connected clients receive new articles in real-time  │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Configuration
-
-### File Locations
-
-| File | Purpose | Format |
-|------|---------|--------|
-| `config/settings.py` | Main configuration module | Python |
-| `config.yaml` | Application-level settings | YAML |
-| `config/news_sources.json` | Source definitions | JSON |
-| `config/industries.yaml` | Industry categories | YAML |
-| `config/categories.yaml` | Content categories | YAML |
-| `config/resilience.yaml` | Fault tolerance settings | YAML |
-| `.env` | Environment variables | Dotenv |
-
-### Core Settings (`config/settings.py`)
-
-#### Directory Configuration
-```python
-BASE_DIR: Path = Path(__file__).resolve().parent.parent
-DATA_DIR: Path = BASE_DIR / "data"
-LOGS_DIR: Path = BASE_DIR / "logs"
-CACHE_DIR: Path = BASE_DIR / "cache"
-SOURCES_DIR: Path = BASE_DIR / "discovered_sources"
-```
-
-#### Scraping Settings
-```python
-CHECK_INTERVAL: int = 3600          # 1 hour between scrape cycles
-MAX_AGE_HOURS: int = 72             # Only fetch articles within 72 hours
-MAX_RETRIES: int = 3                # Retry count for failed requests
-RETRY_DELAY: int = 5                # Initial retry delay (doubles each retry)
-MAX_WORKERS: int = 5                # Max concurrent scraping tasks
-```
-
-#### Rate Limiting
-```python
-SOURCE_SCRAPE_DELAY: float = 2.0      # Delay between sources (sync mode)
-ARTICLE_SCRAPE_DELAY: float = 1.0     # Delay between articles (sync mode)
-DISCOVERY_RATE_LIMIT: float = 2.0     # Discovery requests per second
-RATE_LIMIT_TOKENS_PER_SECOND: float = 2.0  # Refill rate
-RATE_LIMIT_BUCKET_SIZE: int = 10           # Max burst capacity
-```
-
-#### User Agent
-```python
-USER_AGENT: str = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-)
-```
-
-#### Tech Keywords (35+)
-```python
-TECH_KEYWORDS: List[str] = [
-    "technology", "tech", "artificial intelligence", "AI", "machine learning",
-    "software", "hardware", "cybersecurity", "blockchain", "cloud computing",
-    "programming", "coding", "data science", "robotics", "IoT", "5G",
-    "quantum computing", "virtual reality", "augmented reality", "startup",
-    "innovation", "digital", "computer", "electronics", "semiconductor",
-    "neural network", "deep learning", "automation", "API", "SaaS",
-    "open source", "developer", "DevOps", "infrastructure", "microservices"
-]
-```
-
-#### Discovery Configuration
-```python
-DISCOVERY_QUERIES: List[str] = [
-    "latest technology news",
-    "tech news websites",
-    "artificial intelligence news",
-    "software development news",
-    "cybersecurity news today",
-    "tech startups news",
-    "programming news",
-    "cloud computing updates",
-    "machine learning articles",
-    "data science blog",
-]
-```
-
-#### Global Topics (20 topics)
-```python
-GLOBAL_TOPICS: List[str] = [
-    "Artificial Intelligence", "Machine Learning", "Cybersecurity",
-    "Blockchain", "Cloud Computing", "Data Science", "Internet of Things",
-    "5G Technology", "Quantum Computing", "Virtual Reality",
-    "Augmented Reality", "Robotics", "Software Engineering",
-    "Web Development", "Mobile App Development", "DevOps",
-    "Big Data", "Cryptocurrency", "Tech Startups", "Consumer Electronics",
-]
-```
-
-#### Default Sources (Curated)
-```python
-DEFAULT_SOURCES: List[Dict[str, Any]] = [
-    {
-        "url": "https://techcrunch.com/feed/",
-        "type": "rss",
-        "name": "TechCrunch",
-        "verified": True
-    },
-    {
-        "url": "https://feeds.feedburner.com/thenextweb",
-        "type": "rss",
-        "name": "The Next Web",
-        "verified": True
-    },
-    # ... more sources
-]
-```
-
-### Application Settings (`config.yaml`)
-
-```yaml
-# Application Settings
-app:
-  name: "Tech News Scraper"
-  version: "1.0.0"
-  debug: false
-  log_level: "INFO"
-
-# Scraping Configuration
-scraping:
-  request_delay: 5           # Default request delay (seconds)
-  max_concurrent: 3          # Maximum concurrent requests
-  timeout: 30                # Request timeout (seconds)
-  user_agent_rotation: true  # User agent rotation enabled
-  blocked_domains:           # Sites that aggressively block
-    - "analyticsindiamag.com"
-
-# Refresh Settings
-refresh:
-  cooldown_seconds: 300      # 5 minutes between refreshes
-  auto_refresh_interval: 0   # 0 = disabled
-
-# Data Retention
-retention:
-  article_max_age_days: 30   # Maximum article age
-  max_articles: 10000        # Maximum articles to keep
-  cleanup_interval_hours: 24 # Clean frequency
-
-# Redis Configuration (Optional)
-redis:
-  enabled: false
-  url: "redis://localhost:6379/0"
-
-# GUI Settings
-gui:
-  theme: "dark"
-  width: 1400
-  height: 900
-```
-
-### Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GOOGLE_API_KEY` | Yes | Google Custom Search API key |
-| `GOOGLE_CSE_ID` | Yes | Google Custom Search Engine ID |
-| `GEMINI_API_KEY` | No | Google Gemini API for AI features |
-| `NEWSAPI_KEY` | No | NewsAPI.org API key |
-| `BING_API_KEY` | No | Bing Search API key |
-| `REDDIT_CLIENT_ID` | No | Reddit API client ID |
-| `REDDIT_CLIENT_SECRET` | No | Reddit API client secret |
-| `TELEGRAM_BOT_TOKEN` | No | Telegram bot for notifications |
-| `TELEGRAM_CHAT_ID` | No | Telegram chat ID |
-| `DISCORD_WEBHOOK_URL` | No | Discord webhook for notifications |
-| `DATABASE_URL` | No | PostgreSQL connection string |
-| `REDIS_URL` | No | Redis connection string |
-
----
-
-## API Reference
-
-### FastAPI Application (`api/main.py`)
-
-**Base URL:** `http://localhost:8000`
-
-#### Feed Endpoints
-
-**Start Feed**
-```http
-POST /api/feed/start
-Content-Type: application/json
-
-{
-  "max_articles": 500,
-  "max_age_hours": 48,
-  "enable_discovery": true
-}
-```
-
-**Stop Feed**
-```http
-POST /api/feed/stop
-```
-
-**Get Feed Status**
-```http
-GET /api/feed/status
-
-Response:
-{
-  "running": true,
-  "article_count": 42,
-  "last_update": "2026-02-06T10:30:00",
-  "sources_active": 10
-}
-```
-
-#### Articles Endpoints
-
-**List Articles**
-```http
-GET /api/articles?offset=0&limit=50&source=TechCrunch&tier=standard
-
-Response:
-[
-  {
-    "title": "...",
-    "summary": "...",
-    "url": "...",
-    "source": "TechCrunch",
-    "timestamp": "2026-02-06T10:00:00",
-    "tech_score": 0.95,
-    "tier": "standard",
-    "topics": ["AI", "Machine Learning"]
-  }
-]
-```
-
-**Get Article Count**
-```http
-GET /api/articles/count
-
-Response:
-{
-  "count": 42
-}
-```
-
-#### Metrics Endpoints
-
-**Get System Metrics**
-```http
-GET /api/metrics
-
-Response:
-{
-  "cpu_percent": 15.2,
-  "memory_percent": 45.8,
-  "articles_processed": 150,
-  "sources_active": 10,
-  "errors_last_hour": 0,
-  "uptime_seconds": 3600
-}
-```
-
-#### Configuration Endpoints
-
-**Get Config Section**
-```http
-GET /api/config/{section}
-
-Response:
-{
-  "section": "scraping",
-  "data": {
-    "request_delay": 5,
-    "max_concurrent": 3
-  }
-}
-```
-
-**Update Config Section**
-```http
-PUT /api/config/{section}
-Content-Type: application/json
-
-{
-  "request_delay": 10
-}
-```
-
-#### WebSocket Endpoint
-
-**Real-Time Events**
-```http
-WS /ws/events
-
-# Client -> Server
-ping
-
-# Server -> Client
-pong
-
-# New Article Event
-{
-  "type": "article",
-  "data": {
-    "title": "...",
-    "summary": "...",
-    "url": "...",
-    "source": "...",
-    "timestamp": "...",
-    "tech_score": 0.95,
-    "tier": "standard"
-  }
-}
-```
-
-#### Health Check
-
-```http
-GET /health
-
-Response:
-{
-  "status": "healthy",
-  "version": "1.0.0",
-  "running": true
-}
-```
-
----
-
-## Data Structures
-
-### 1. Priority Queue (`src/data_structures/priority_queue.py`)
-
-**Time Complexity:**
-- `push`: O(log n)
-- `pop`: O(log n) amortized
-- `peek`: O(1)
-- `update_priority`: O(log n)
-
-**Space Complexity:** O(n)
-
-**Features:**
-- Thread-safe (RLock)
-- Lazy deletion for priority updates
-- Stable sorting via counter
-
-### 2. Bloom Filter (`src/data_structures/bloom_filter.py`)
-
-**Purpose:** Probabilistic duplicate URL detection
-
-**Properties:**
-- False positive rate: configurable (default ~1%)
-- False negative rate: 0%
-- Memory efficient: ~10 bits per element
-
-**Configuration:**
-```python
-expected_elements = 100_000
-false_positive_rate = 0.01
-```
-
-### 3. LRU Cache (`src/data_structures/lru_cache.py`)
-
-**Purpose:** HTTP response caching
-
-**Time Complexity:**
-- `get`: O(1)
-- `put`: O(1)
-
-**Features:**
-- Thread-safe
-- TTL support
-- Automatic eviction
-
-### 4. Trie (`src/data_structures/trie.py`)
-
-**Purpose:** Fast tech keyword matching
-
-**Time Complexity:**
-- Insert: O(m) where m = word length
-- Search: O(m)
-- Prefix search: O(m + k) where k = results
-
-**Features:**
-- Case-insensitive matching
-- Prefix suggestions
-- Keyword counting
-
-### 5. URL Deduplicator
-
-**Purpose:** Semantic deduplication using MinHash LSH
-
-**Technique:**
-- Shingles: 3-grams
-- Hash functions: 128
-- Similarity threshold: 0.85
-
----
-
-## Bypass System
-
-### 1. AntiBotBypass (`src/bypass/anti_bot.py`)
-
-**Purpose:** Detect and bypass anti-bot protections
-
-**Detection Methods:**
-- CAPTCHA indicators (recaptcha, hcaptcha, etc.)
-- Challenge pages
-- Bot detection scripts
-- Rate limiting responses
-
-**Bypass Strategies:**
-
-#### Stealth Mode (Default)
-```python
-stealth_config = StealthConfig(
-    user_agent_rotation=True,
-    viewport_randomization=True,
-    javascript_injection=True,
-    fingerprint_randomization=True
-)
-```
-
-#### Browser Automation
-```python
-# Using Playwright
-browser = await playwright.chromium.launch(
-    headless=True,
-    args=['--disable-blink-features=AutomationControlled']
-)
-```
-
-**Bypass Flow:**
-1. Try regular HTTP request with stealth headers
-2. If blocked (403/429/CAPTCHA), enable stealth mode
-3. If still blocked, use browser automation (Playwright)
-4. If paywall detected, invoke paywall bypass
-
-### 2. ContentPlatformBypass (`src/bypass/content_platform_bypass.py`)
-
-**Purpose:** Platform-specific content extraction
-
-**Supported Platforms:**
-
-| Platform | Detection Pattern | Strategy |
-|----------|------------------|----------|
-| Medium | `medium.com`, `towardsdatascience.com` | Playwright-first, scroll simulation |
-| Substack | `substack.com` | API endpoint detection |
-| Ghost | `ghost.io` | JavaScript rendering |
-| Dev.to | `dev.to` | Direct API access |
-| Hashnode | `hashnode.dev` | GraphQL API |
-
-**Medium-Specific Extraction:**
-```python
-# Selectors for Medium
-MEDIUM_SELECTORS = [
-    '[data-testid="postContent"]',
-    'article[data-testid="postArticle"]',
-    '.postArticle-content',
-    'article section',
-]
-
-# Scroll simulation for lazy-loaded content
-await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-await page.wait_for_timeout(1000)
-```
-
-### 3. PaywallBypass (`src/bypass/paywall_bypass.py`)
-
-**Purpose:** Detect and bypass paywalls
-
-**Paywall Detection:**
-- DOM analysis for paywall indicators
-- Content length validation
-- Keyword matching ("subscribe", "premium", etc.)
-
-**Bypass Techniques:**
-- Archive.org (Wayback Machine)
-- Archive.today
-- Textise dot iitty
-- Reader mode simulation
-
-**Paywall Indicators:**
-```python
-PAYWALL_INDICATORS = [
-    'subscribe to read',
-    'subscribe to continue',
-    'log in to continue',
-    'premium content',
-    'this article is for subscribers only',
-]
-```
-
-### 4. ProxyManager (`src/bypass/proxy_manager.py`)
-
-**Purpose:** Rotate proxies for IP diversification
-
-**Features:**
-- Round-robin rotation
-- Health checking
-- Geographic targeting
-- Authentication support
-
-**Configuration:**
-```python
-proxy_manager.add_proxies_from_list([
-    "http://user:pass@proxy1:8080",
-    "http://proxy2:8080",
-    "socks5://proxy3:1080"
-])
-```
-
----
-
-## Deployment
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.8+
-- pip or poetry
-- (Optional) Redis 6.0+ for real-time features
-- (Optional) PostgreSQL 12+ for production
+- pip
+- (Optional) Redis — for real-time features, caching, and distributed queue
+- (Optional) Playwright — for advanced Cloudflare bypass
+- (Optional) Elasticsearch 8.x — for full-text search
+- (Optional) Rust toolchain + `maturin` — to rebuild the Rust bypass extension
 
 ### Installation
 
+**1. Clone the repository:**
 ```bash
-# 1. Clone repository
-git clone <repository-url>
-cd tech_news_scraper
-
-# 2. Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Install Playwright (for bypass features)
-playwright install
-
-# 5. Configure environment
-cp .env.example .env
-# Edit .env with your API keys
-
-# 6. Run verification
-python tests/verify_system.py
+git clone https://github.com/amalssaienthusiast/Tech_News_Scrapper.git
+cd Tech_News_Scrapper
 ```
 
-### Running the Application
+**2. Create a virtual environment:**
+```bash
+python -m venv env
+source env/bin/activate  # On Windows: env\Scripts\activate
+```
 
-#### CLI Mode
+**3. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Install Playwright browsers (optional):**
+```bash
+playwright install chromium
+```
+
+**5. Copy and configure environment variables:**
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+---
+
+## ⚙️ Configuration Reference
+
+Create a `.env` file in the project root. All keys are optional unless marked **Required**.
+
+```env
+# ─────────────────────────────────────────────
+# GOOGLE (Required for Google News + Search)
+# ─────────────────────────────────────────────
+GOOGLE_API_KEY=AIza...              # Google Custom Search API key
+GOOGLE_CSE_ID=your_cse_id          # Custom Search Engine ID
+
+# ─────────────────────────────────────────────
+# AI / LLM
+# ─────────────────────────────────────────────
+GEMINI_API_KEY=your_gemini_api_key  # Google Gemini 1.5 Flash
+
+# ─────────────────────────────────────────────
+# NEWS SOURCES
+# ─────────────────────────────────────────────
+NEWSAPI_KEY=your_newsapi_key        # newsapi.org (free: 100 req/day)
+BING_API_KEY=your_bing_api_key      # Azure Bing News Search v7
+REDDIT_CLIENT_ID=your_client_id     # Reddit API (PRAW)
+REDDIT_CLIENT_SECRET=your_secret
+TWITTER_BEARER_TOKEN=your_token     # Twitter/X API v2 bearer token
+SERPAPI_KEY=your_serpapi_key        # SerpAPI (paid, real-time Google)
+
+# ─────────────────────────────────────────────
+# NOTIFICATIONS
+# ─────────────────────────────────────────────
+TELEGRAM_BOT_TOKEN=123456:abc...    # Telegram bot token
+TELEGRAM_CHAT_ID=your_chat_id
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+SLACK_BOT_TOKEN=xoxb-...            # Slack SDK token
+
+# ─────────────────────────────────────────────
+# EMAIL DIGEST
+# ─────────────────────────────────────────────
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SENDER_EMAIL=your@gmail.com
+SENDER_PASSWORD=your_app_password
+
+# ─────────────────────────────────────────────
+# NEWSLETTER (Beehiiv)
+# ─────────────────────────────────────────────
+BEEHIIV_API_KEY=your_beehiiv_key
+BEEHIIV_PUBLICATION_ID=your_pub_id
+
+# ─────────────────────────────────────────────
+# DATABASE
+# ─────────────────────────────────────────────
+# Default: SQLite (no config needed)
+# DATABASE_URL=postgresql://user:pass@localhost/technews
+
+# ─────────────────────────────────────────────
+# REDIS (optional)
+# ─────────────────────────────────────────────
+REDIS_URL=redis://localhost:6379/0
+
+# ─────────────────────────────────────────────
+# ELASTICSEARCH (optional)
+# ─────────────────────────────────────────────
+ELASTICSEARCH_URL=http://localhost:9200
+
+# ─────────────────────────────────────────────
+# API
+# ─────────────────────────────────────────────
+API_KEY=your_secret_api_key         # For REST API authentication
+```
+
+---
+
+## ▶️ Running the Application
+
+### PyQt6 GUI Dashboard
+```bash
+python run_qt.py
+```
+
+### Interactive CLI (TUI)
 ```bash
 python cli.py
 ```
 
-#### API Mode
+### FastAPI REST Server
 ```bash
-# Using module
-python -m api.main
-
-# Using uvicorn
-uvicorn api.main:app --reload --port 8000 --host 0.0.0.0
-
-# Production
-uvicorn api.main:app --workers 4 --port 8000
+uvicorn src.api.main:app --reload --port 8000
+# Or:
+python -m src.api.main
 ```
 
-#### GUI Mode
-```bash
-# Python GUI (if available)
-python gui/app.py
-
-# C++ Qt GUI
-cd gui_qt && ./build/tech_news_gui
-```
-
-#### Basic Scraper
+### Basic Scraper (headless)
 ```bash
 python main.py
 ```
 
-### Docker Deployment
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-RUN playwright install chromium
-
-COPY . .
-
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
+### Celery Worker (distributed queue)
 ```bash
-docker build -t tech-news-scraper .
-docker run -p 8000:8000 --env-file .env tech-news-scraper
+celery -A src.queue.celery_app worker --loglevel=info
 ```
 
-### Production Checklist
-
-- [ ] Use PostgreSQL instead of SQLite
-- [ ] Configure Redis for real-time features
-- [ ] Set up monitoring (Prometheus/Grafana)
-- [ ] Configure log rotation
-- [ ] Set up SSL/TLS
-- [ ] Configure firewall rules
-- [ ] Set up backups
-- [ ] Configure rate limiting at load balancer
-- [ ] Enable request caching
-- [ ] Set up error tracking (Sentry)
+### Celery Beat Scheduler
+```bash
+celery -A src.queue.celery_app beat --loglevel=info
+```
 
 ---
 
-## Troubleshooting
+## 📁 Project Structure
 
-### Common Issues
-
-#### Import Errors
-**Symptom:** `ModuleNotFoundError: No module named 'src'`
-
-**Solution:**
-```bash
-# Ensure running from project root
-cd /path/to/tech_news_scraper
-python -m src.scraper
-
-# Or set PYTHONPATH
-export PYTHONPATH=/path/to/tech_news_scraper:$PYTHONPATH
+```
+tech_news_scraper/
+├── src/
+│   ├── api/                    # FastAPI REST API & WebSocket endpoints
+│   ├── bypass/                 # Anti-bot bypass (Rust extension + TLS + Playwright)
+│   │   └── target/             # Compiled Rust native library
+│   ├── cache/                  # Redis cache layer
+│   ├── compatibility/          # Package shims and RSS adapters
+│   ├── compliance/             # GDPR/CCPA data privacy management
+│   ├── core/                   # Types, protocols, exceptions, events
+│   ├── crawler/                # Link-following web crawler
+│   ├── data_structures/        # Article queue and custom data types
+│   ├── db_storage/             # Async DB, migrations, unified storage
+│   ├── discovery/              # Global source discovery system
+│   ├── engine/                 # Core orchestrator + scraper logic
+│   ├── extraction/             # Content extractors (API sniffer, LLM, Medium)
+│   ├── feed_generator/         # Live feed buffer + deduplicator
+│   ├── infrastructure/         # Redis event bus
+│   ├── intelligence/           # AI/ML: LLM, sentiment, disruption, classifier
+│   ├── monitoring/             # Health checks + Prometheus metrics
+│   ├── newsletter/             # LangGraph newsletter pipeline + Beehiiv publisher
+│   ├── notifications/          # Email digest service
+│   ├── operations/             # Diagnostic toolkit
+│   ├── performance/            # Parallel scraper + LRU cache
+│   ├── personalization/        # User preference-based scoring
+│   ├── processing/             # Multi-method deduplication engine
+│   ├── queue/                  # Celery app + distributed task definitions
+│   ├── realtime/               # WebSocket server + SSE server
+│   ├── resilience/             # Auto-fixer, source health, deprecation manager
+│   ├── scheduler/              # APScheduler task scheduling
+│   ├── scrapers/               # Scraper implementations (RSS, API, Google News, factory)
+│   ├── search/                 # Elasticsearch client + indexer + query builder
+│   ├── security/               # API key manager
+│   ├── sources/                # All source integrations (10+ providers)
+│   ├── user/                   # User preferences model
+│   ├── utils/                  # Shared utilities
+│   ├── database.py             # Main SQLite singleton
+│   ├── discovery.py            # Legacy discovery module
+│   ├── rate_limiter.py         # Global rate limiter
+│   └── scraper.py              # Legacy base scraper
+│
+├── gui_qt/                     # PyQt6 desktop dashboard
+│   ├── app_qt_migrated.py      # Main PyQt6 application window
+│   ├── dialogs/
+│   │   ├── article_viewer.py   # Full article content viewer
+│   │   └── sentiment_dialog.py # Sentiment dashboard dialog
+│   ├── widgets/
+│   │   ├── live_monitor_overlay.py   # Full-screen 7-widget live monitor
+│   │   ├── live_activity_log.py      # Color-coded real-time log
+│   │   ├── live_article_stream.py    # Live article stream panel
+│   │   ├── live_source_monitor.py    # Source heartbeat monitor
+│   │   ├── network_graph.py          # Network throughput bar graph
+│   │   ├── pipeline_visualizer.py    # 6-stage pipeline indicator
+│   │   └── source_activity_matrix.py # Source grid with progress bars
+│   └── theme.py                # Color constants and font definitions
+│
+├── api/                        # Additional API configuration
+├── BOT_setup_telegram/         # Telegram bot setup scripts
+├── config/                     # YAML configuration files
+├── data/                       # SQLite databases
+├── docs/                       # Additional documentation
+├── logs/                       # Application log files
+├── tests/                      # Full test suite (25 test files)
+│
+├── cli.py                      # Interactive TUI (Rich-based)
+├── main.py                     # Headless scraper entry point
+├── run_qt.py                   # PyQt6 GUI launcher
+├── requirements.txt            # All Python dependencies
+├── config.yaml                 # Application configuration
+├── .env.example                # Environment variable template
+└── LICENSE                     # Proprietary license
 ```
 
-#### Database Locked (SQLite)
-**Symptom:** `sqlite3.OperationalError: database is locked`
+---
 
-**Causes:**
-- Concurrent writes from multiple processes
-- Long-running transactions
-- SQLite's single-writer limitation
+## 🧪 Test Suite
 
-**Solutions:**
-```python
-# 1. Increase timeout
-connection = sqlite3.connect('tech_news.db', timeout=30)
-
-# 2. Enable WAL mode
-cursor.execute('PRAGMA journal_mode=WAL')
-
-# 3. Migrate to PostgreSQL
-DATABASE_URL=postgresql://user:pass@localhost/technews
-```
-
-#### Bypass Failures
-**Symptom:** Content extraction fails with "Could not fetch content"
-
-**Solutions:**
-```bash
-# 1. Install Playwright
-playwright install
-
-# 2. Enable browser automation in config
-ENABLE_ANTI_BOT_BYPASS=true
-USE_BROWSER_AUTOMATION=true
-
-# 3. Check proxy configuration
-PROXY_ENABLED=true
-PROXY_LIST=["http://proxy:8080"]
-
-# 4. Increase retry count
-MAX_BYPASS_RETRIES=5
-```
-
-#### API Rate Limits
-**Symptom:** `429 Too Many Requests` from APIs
-
-**Solutions:**
-```python
-# 1. Configure multiple API keys
-GOOGLE_API_KEY_1=...
-GOOGLE_API_KEY_2=...
-
-# 2. Enable fallback providers
-ENABLE_FALLBACK_PROVIDERS=true
-
-# 3. Increase delays
-RATE_LIMIT_TOKENS_PER_SECOND=1.0
-RETRY_DELAY=10
-```
-
-#### High Memory Usage
-**Symptom:** Process consumes excessive memory
-
-**Solutions:**
-```python
-# 1. Limit concurrent operations
-MAX_WORKERS=3
-max_concurrent_scrapes=3
-
-# 2. Enable response caching
-enable_cache=true
-
-# 3. Reduce article retention
-article_max_age_days=7
-max_articles=5000
-
-# 4. Run cleanup
-python -c "from src.database import Database; db = Database(); db.cleanup_old_articles()"
-```
-
-### Debug Mode
-
-Enable detailed logging:
-```python
-import logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-```
-
-### Testing
+All tests live in `tests/`. Run with:
 
 ```bash
 # Run all tests
 pytest
 
-# With coverage
+# With coverage report
 pytest --cov=src tests/
 
-# Specific test
+# Run specific module tests
 pytest tests/test_bypass.py -v
-
-# Debug specific issue
-python tests/debug_medium.py
+pytest tests/test_resilience.py -v
+pytest tests/test_rust_integration.py -v
 ```
+
+| Test File | Coverage Area |
+|---|---|
+| `test_scraper.py` | Core scraper logic |
+| `test_database.py` | Database CRUD and schema |
+| `test_async_database.py` | Async DB operations |
+| `test_ai_processor.py` | AI summarization and classification |
+| `test_rate_limiter.py` | Rate limiting behavior |
+| `test_bypass.py` | Bypass system unit tests |
+| `test_live_bypass.py` | Live site bypass integration |
+| `test_content_platform_bypass.py` | Content platform (Medium etc.) bypass |
+| `test_integration_bypass.py` | End-to-end bypass pipeline |
+| `test_rust_integration.py` | Rust extension bindings |
+| `test_discovery.py` | Source discovery |
+| `test_compatibility.py` | Package shim compatibility |
+| `test_resilience.py` | Auto-fixer and health monitor |
+| `test_realtime_logging.py` | Real-time log streaming |
+| `test_gui_qt.py` | PyQt6 widget instantiation |
+| `test_user_preferences.py` | User preference model |
+| `test_directory_scraper_selectors.py` | CSS selector scraping |
+| `test_medium_pipeline.py` | Medium.com extraction pipeline |
+| `test_google_search_diagnostic.py` | Google Search API diagnostics |
+| `test_neural_eraser.py` | Neural content filtering |
+| `test_pdf_handling.py` | PDF content extraction |
+| `performance_benchmark.py` | Scraper throughput benchmarks |
+| `verify_system.py` | Full system health verification |
+| `debug_medium.py` | Medium.com debug utilities |
 
 ---
 
-## Development Guide
+## 📦 Dependencies
 
-### Code Style
+Key dependencies grouped by subsystem:
 
-- Type hints for function signatures
-- Docstrings for public methods (Google style)
-- Async/await for I/O operations
-- Black formatting (line length 88)
-- isort for imports
-
-### Project Structure
-
-```
-tech_news_scraper/
-├── api/                    # FastAPI REST API & WebSocket
-│   ├── main.py            # Main FastAPI app
-│   ├── events.py          # Event handlers
-│   └── __init__.py
-├── config/                # Configuration files
-│   ├── settings.py        # Main config module
-│   ├── config.yaml        # App settings
-│   ├── news_sources.json  # Source definitions
-│   ├── industries.yaml    # Industry categories
-│   └── categories.yaml    # Content categories
-├── gui_qt/                # C++ Qt GUI
-├── src/
-│   ├── api/               # API-specific logic
-│   ├── bypass/            # Anti-bot mechanisms
-│   │   ├── anti_bot.py
-│   │   ├── content_platform_bypass.py
-│   │   ├── paywall_bypass.py
-│   │   └── proxy_manager.py
-│   ├── core/              # Types, protocols, exceptions
-│   │   ├── types.py
-│   │   ├── exceptions.py
-│   │   └── events.py
-│   ├── data_structures/   # Efficient data structures
-│   │   ├── priority_queue.py
-│   │   ├── bloom_filter.py
-│   │   ├── lru_cache.py
-│   │   └── trie.py
-│   ├── engine/            # Core business logic
-│   │   ├── orchestrator.py
-│   │   ├── deep_scraper.py
-│   │   ├── query_engine.py
-│   │   ├── url_analyzer.py
-│   │   └── quality_filter.py
-│   ├── intelligence/      # AI/ML processing
-│   │   └── llm_client.py
-│   ├── sources/           # External source integrations
-│   ├── scrapers/          # Scraper implementations
-│   ├── queue/             # Celery distributed task queue
-│   ├── newsletter/        # Newsletter generation
-│   ├── resilience/        # Auto-healing & fault tolerance
-│   └── monitoring/        # Health checks & metrics
-├── tests/                 # Test suite
-├── data/                  # Data storage (SQLite DB)
-├── logs/                  # Log files
-├── docs/                  # Documentation
-├── cli.py                 # Interactive TUI
-├── main.py                # Main entry point
-└── requirements.txt       # Python dependencies
-```
-
-### Adding a New Bypass Strategy
-
-1. Create file in `src/bypass/`
-2. Implement bypass class:
-```python
-class NewBypass:
-    async def bypass(self, url: str) -> BypassResult:
-        # Implementation
-        return BypassResult(success=True, content=html)
-```
-3. Register in `DeepScraper`:
-```python
-if self.new_bypass.can_handle(url):
-    result = await self.new_bypass.bypass(url)
-```
-4. Add tests in `tests/test_new_bypass.py`
-
-### Adding a New Source
-
-1. Edit `config/news_sources.json`:
-```json
-{
-  "url": "https://example.com/feed",
-  "type": "rss",
-  "name": "Example Source",
-  "verified": false,
-  "tier": 3
-}
-```
-
-2. Or use discovery:
-```python
-from src.discovery import WebDiscoveryAgent
-agent = WebDiscoveryAgent(db)
-new_sources = agent.discover_new_sources(query="example tech news")
-```
-
-### Database Schema
-
-```sql
--- Articles table
-CREATE TABLE articles (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    url TEXT UNIQUE NOT NULL,
-    source TEXT NOT NULL,
-    published TIMESTAMP,
-    scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ai_summary TEXT,
-    full_content TEXT,
-    tech_score REAL,
-    tier TEXT DEFAULT 'standard',
-    topics TEXT  -- JSON array
-);
-
--- Sources table
-CREATE TABLE sources (
-    url TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    type TEXT DEFAULT 'rss',
-    verified BOOLEAN DEFAULT 0,
-    tier INTEGER DEFAULT 3,
-    article_count INTEGER DEFAULT 0,
-    last_scraped TIMESTAMP,
-    success_rate REAL DEFAULT 0.5
-);
-
--- URL cache table
-CREATE TABLE url_cache (
-    url TEXT PRIMARY KEY,
-    hash TEXT,
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+| Category | Packages |
+|---|---|
+| **HTTP / Scraping** | `aiohttp`, `requests`, `beautifulsoup4`, `feedparser`, `lxml`, `Brotli` |
+| **Bypass** | `playwright`, `curl-cffi`, `fake-useragent`, `maturin` (Rust) |
+| **AI / ML** | `google-generativeai`, `langchain-google-genai`, `langchain-core`, `transformers`, `sentence-transformers`, `torch` |
+| **Newsletter** | `langgraph`, `slack-sdk`, `APScheduler` |
+| **API / Realtime** | `fastapi`, `uvicorn`, `websockets`, `redis` |
+| **Queue** | `celery` |
+| **Search** | `elasticsearch` |
+| **Deduplication** | `datasketch` (MinHash LSH), `fuzzywuzzy`, `python-Levenshtein` |
+| **Sources** | `newsapi-python`, `google-api-python-client`, `praw`, `tweepy`, `ddgs`, `pytrends` |
+| **GUI** | `PyQt6` |
+| **Validation** | `pydantic>=2.0`, `PyYAML`, `python-dotenv` |
+| **Monitoring** | `psutil`, `python-dateutil` |
+| **Testing** | `pytest`, `pytest-asyncio`, `aioresponses` |
 
 ---
 
-## Performance Metrics
+## 🗺 Roadmap
 
-### Benchmarks
-
-| Operation | Performance | Notes |
-|-----------|-------------|-------|
-| RSS Feed Parse | ~50 articles/sec | Depends on feed size |
-| Web Page Scrape | ~5 pages/sec | With anti-bot bypass |
-| AI Summarization | ~2 articles/sec | Gemini API latency |
-| Deduplication | ~10,000 URLs/sec | Bloom filter |
-| Semantic Deduplication | ~1,000 URLs/sec | MinHash LSH |
-| Query Analysis | ~1,000 queries/sec | Trie-based matching |
-
-### Resource Usage
-
-| Component | Memory | CPU | Notes |
-|-----------|--------|-----|-------|
-| Idle | ~50 MB | <1% | Base process |
-| Scraping | ~200 MB | 20-40% | With browser automation |
-| AI Processing | ~100 MB | 10% | API-bound, not CPU |
-| API Server | ~75 MB | <5% | Per worker |
-
-### Optimization Tips
-
-1. **Enable Response Caching**: Reduces redundant requests by 60-80%
-2. **Use Async Mode**: 5-10x faster than synchronous scraping
-3. **Limit Concurrent Operations**: Prevents rate limiting and memory issues
-4. **Configure Bloom Filter**: Memory-efficient duplicate detection
-5. **Use PostgreSQL**: Better concurrency than SQLite for high traffic
-
----
-
-## Security Considerations
-
-### Data Protection
-
-- API keys stored in `.env` (never commit to git)
-- `.env` in `.gitignore`
-- Database file permissions: 600
-- Log rotation to prevent disk fill
-
-### Rate Limiting
-
-- Token bucket algorithm prevents abuse
-- Per-source rate limiting
-- Global request throttling
-- Automatic retry with backoff
-
-### Content Safety
-
-- HTML sanitization before storage
-- XSS protection in API responses
-- Content length limits
-- Malicious URL detection
-
----
-
-## Roadmap
-
-### Version 1.1 (Planned)
-- [ ] PostgreSQL support for production scaling
-- [ ] Kubernetes deployment configs
+- [x] Multi-source aggregation (RSS, Google, Bing, NewsAPI, Reddit, Twitter, DDG, Trends)
+- [x] AI-powered analysis (Gemini + local fallback)
+- [x] 25-category classification
+- [x] Advanced bypass (Rust + TLS + Playwright)
+- [x] Real-time delivery (WebSocket + SSE + Redis)
+- [x] LangGraph newsletter pipeline
+- [x] PyQt6 desktop dashboard with live monitoring
+- [x] Resilience system and auto-healing
+- [x] Prometheus metrics + health endpoints
+- [x] GDPR/CCPA compliance module
+- [ ] PostgreSQL production migration with full schema
+- [ ] Kubernetes deployment manifests
 - [ ] GraphQL API endpoint
-- [ ] Advanced analytics dashboard
-
-### Version 1.2 (Planned)
-- [ ] Machine learning model for source quality prediction
-- [ ] Automatic source discovery with ML
-- [ ] Sentiment analysis improvements
-- [ ] Multi-language support
-
-### Version 2.0 (Future)
-- [ ] Distributed scraping with Celery
-- [ ] Real-time collaboration features
-- [ ] Mobile app integration
-- [ ] Blockchain-based content verification
+- [ ] Mobile companion app (iOS/Android)
+- [ ] Advanced analytics dashboard (Grafana integration)
+- [ ] Multi-language news support
 
 ---
 
-## License
+## 📄 License
 
 This repository is proprietary. Permission is restricted to viewing the source code for educational purposes. See the [LICENSE](LICENSE) file for complete details.
 
----
-
-## Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check existing documentation in `docs/`
-- Review API docs at `/docs` when running the server
-- Email: [Add support email]
-
----
-
-## Acknowledgments
-
-- Built with Python 3.11
-- Uses Google's Gemini for AI features
-- FastAPI for API framework
-- Playwright for browser automation
-- SQLite/PostgreSQL for data storage
-
----
-
-**Document Version:** 1.0.0  
-**Last Updated:** 2026-02-06  
-**Maintainer:** [Add Maintainer Name]
-
-
-## Architecture Updates
-
----
-## Final Senior Architectural Breakdown
-
-### **1. Core System Architecture**
-The "Tech News Scraper" is a highly concurrent, multi-tier intelligence pipeline designed to aggregate, scrape, bypass anti-bot mechanisms, process, and serve tech news. It employs a hybrid language approach (Python + Rust) and a dual-backend database strategy to maximize throughput and flexibility.
-
-#### A. **Orchestration & Asynchronous Event Loop**
-- **The Brain**: `TechNewsOrchestrator` (`src/engine/orchestrator.py`) handles the lifecycle of discovery, scraping, and deep analysis.
-- **Task Queues**: Scaling is managed by **Celery** (`src/queue/celery_app.py`), backed by **Redis**, to distribute workload across workers for parallel source scraping (`google`, `bing`, `newsapi`, `reddit`, etc.) and heavy deep-dive analysis.
-- **GUI Bridge**: The PyQt6 UI operates on a distinct thread loop. It uses an `AsyncBridge` (`gui_qt/utils/async_bridge.py`) that marries QThreads with `asyncio`, keeping the UI perfectly responsive while heavy scraping or LLM extraction occurs in the background.
-
-#### B. **Scraping & Paywall Bypass Engines**
-A multi-layered defense penetration strategy ensures content is extracted even from highly fortified domains:
-- **Rust Quantum Bypass**: `QuantumPaywallBypass` uses native Rust bindings (`src/bypass/lib.rs` via PyO3) for high-performance, TLS-fingerprint-randomized HTTP fetching.
-- **Playwright Stealth Browser**: `StealthBrowserBypass` fires up a headless browser injected with anti-bot defeating scripts (mimicking human interactions, spoofing `navigator.webdriver`, intercepting API calls via `api_sniffer.py`).
-- **Fallbacks**: If standard CSS selectors fail, `LLMContentExtractor` triggers, utilizing a local **Llama-3-8B-Q4** quantized model (via `llama_cpp`) to semantically strip headers, ads, and sidebars from raw HTML dumps.
-
-#### C. **Intelligence & Processing Layer**
-- **Semantic Search Engine**: Converts article titles/summaries into vector embeddings using **Sentence-BERT** (`all-MiniLM-L6-v2`) via HuggingFace `sentence_transformers`.
-- **Abstractive Summarization**: Utilizes **DistilBART** (`sshleifer/distilbart-cnn-6-6`) for fast, local summarizations.
-- **Multi-Method Deduplication**: Ensures data purity.
-  - **Fuzzy Text Matching**: (`fuzzywuzzy`) for near-identical titles.
-  - **URL Normalization**: Strips tracking IDs (`utm_source`, etc.).
-  - **MinHash LSH**: (`datasketch`) Shingles article content into n-grams to detect heavily syndicated content across entirely different domains.
-
-#### D. **Storage & State**
-- **Database Engine**: Implements an async-first data layer (`src/db_storage/async_database.py`) using `asyncpg` (PostgreSQL) for production clusters and `aiosqlite` (SQLite) for localized setups. 
-- **Analytics Schema**: Highly enriched schemas. `article_intelligence` table tracks LLM-assigned properties like `criticality`, `disruptive` flags, `affected_markets`, and `sentiment`.
-- **Full Text Search**: Relies on PostgreSQL `GIN` indexing over `tsvector` types for instantaneous document search at scale.
-
----
-
-### **2. Procedures for Recreating/Refactoring the Project**
-
-If you need to recreate, refactor, or clone this architecture, execute these steps sequentially:
-
-#### **Phase 1: Environment & Rust Infrastructure**
-1. **Initialize Environments:** Setup a Python virtual environment and ensure `Cargo` (Rust) is installed.
-2. **Compile the Bypass Engine:** 
-   - Navigate to `src/bypass/` and write the `Cargo.toml`.
-   - Compile `lib.rs` into a shared library using PyO3 (`maturin develop --release`). 
-   - Integrate it into Python as `quantum_bypass`.
-3. **Setup Redis & Celery:** Ensure Redis is running locally or via Docker to act as the Celery broker (`celery -A src.queue.celery_app worker`).
-
-#### **Phase 2: Database & Storage**
-1. **Implement Dual-Backend Async DB:** Build `async_database.py`. 
-2. **Schema Generation:** Write the raw SQL migrations to build the tables (`articles`, `sources`, `article_intelligence`, `newsletters`).
-3. **Indexing:** Apply `GIN` indexes and `tsvector` configs specifically for the PostgreSQL adapter to ensure full-text search scales.
-
-#### **Phase 3: The Intelligence Pipeline**
-1. **Local LLM Integrations:** Download quantized GGUF models (`Llama-3-8B-Q4`) and map them using `llama_cpp` for the `LLMContentExtractor`.
-2. **Transformers Setup:** Initialize `SentenceTransformer` and `pipeline("summarization")` inside `ai_processor.py`. Cache these globally so they don't block the async loop.
-3. **Deduplication Engine:** Implement `URLNormalizer`, Title string fuzzy matching, and MinHash LSH (`datasketch`) into the `DeduplicationEngine`.
-
-#### **Phase 4: Orchestration & Concurrency**
-1. **Build the Aggregator:** Code `DiscoveryAggregator` to handle the broad-stroke scraping (NewsAPI, Google, Bing, Reddit). 
-2. **Celery Task Binding:** Wrap the broad-stroke scrapers into `@task` decorators inside `src/queue/tasks.py`. 
-3. **TechNewsOrchestrator:** Map out the `TechNewsOrchestrator` to act as the main async switchboard, taking discovered URLs, throwing them at the Quantum Bypass, falling back to Playwright, pushing them through LLM Extraction, and inserting them into the database.
-
-#### **Phase 5: User Interface**
-1. **Qt Layout Setup:** Develop the main window in PyQt6.
-2. **Async Bridge Integration:** Crucially, implement `AsyncBridge` (inheriting from `QThread`). Create a background `asyncio` event loop that talks to the `TechNewsOrchestrator` and signals the main UI thread via standard Qt Signals when new data is ready or scraped.
-
----
-**End of Report.**
+**Copyright © 2026 amalssaienthusiast. All Rights Reserved.**
