@@ -1424,7 +1424,7 @@ CREATE TABLE url_cache (
 
 ## License
 
-[Add License Information Here]
+This repository is proprietary. Permission is restricted to viewing the source code for educational purposes. See the [LICENSE](LICENSE) file for complete details.
 
 ---
 
