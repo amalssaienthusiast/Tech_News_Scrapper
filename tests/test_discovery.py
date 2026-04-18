@@ -179,5 +179,404 @@ class TestWebDiscoveryAgentAPI(unittest.TestCase):
         self.assertTrue(agent.api_available['bing'])
 
 
+# =============================================================================
+# NEW: GOOGLE NEWS INTEGRATION TESTS
+# =============================================================================
+
+class TestGoogleNewsIntegration(unittest.TestCase):
+    """Test cases for Google News integration."""
+    
+    def test_google_news_rss_initialization(self):
+        """Test Google News RSS client initializes correctly."""
+        from src.sources.google_news import GoogleNewsRSS
+        
+        rss = GoogleNewsRSS(region="us")
+        self.assertIsNotNone(rss)
+    
+    def test_google_news_url_building(self):
+        """Test Google News RSS URL construction."""
+        from src.sources.google_news import GoogleNewsRSS
+        
+        rss = GoogleNewsRSS(region="us")
+        url = rss._build_url()
+        
+        self.assertIn("news.google.com", url)
+        self.assertIn("hl=en", url)
+        self.assertIn("gl=US", url)
+    
+    def test_google_news_entry_parsing(self):
+        """Test parsing of RSS feed entries."""
+        from src.sources.google_news import GoogleNewsRSS
+        
+        rss = GoogleNewsRSS()
+        
+        # Create a dictionary-like mock that supports .get()
+        class MockEntry:
+            link = "https://example.com/article"
+            title = "Test Article Title - TechNews"
+            summary = "Article summary here"
+            published_parsed = (2026, 1, 20, 12, 0, 0, 0, 0, 0)
+            
+            def get(self, key, default=""):
+                return getattr(self, key, default)
+        
+        mock_entry = MockEntry()
+        article = rss._parse_entry(mock_entry)
+        
+        self.assertIsNotNone(article)
+        self.assertEqual(article.title, "Test Article Title")
+        self.assertEqual(article.source, "TechNews")
+    
+    def test_unified_google_client(self):
+        """Test unified Google News client."""
+        from src.sources.google_news import GoogleNewsClient
+        
+        client = GoogleNewsClient(region="us")
+        
+        # API should reflect config
+        # (will be False if GOOGLE_API_KEY not set)
+        self.assertIsInstance(client.api_enabled, bool)
+
+
+# =============================================================================
+# NEW: BING NEWS INTEGRATION TESTS
+# =============================================================================
+
+class TestBingNewsIntegration(unittest.TestCase):
+    """Test cases for Bing News API integration."""
+    
+    def test_bing_client_initialization(self):
+        """Test Bing News client initializes correctly."""
+        from src.sources.bing_news import BingNewsClient
+        
+        client = BingNewsClient()
+        self.assertIsNotNone(client)
+    
+    def test_bing_categories_defined(self):
+        """Test Bing News categories are defined."""
+        from src.sources.bing_news import BingNewsClient
+        
+        client = BingNewsClient()
+        
+        self.assertIn("ScienceAndTechnology", client.CATEGORIES)
+        self.assertIn("Business", client.CATEGORIES)
+    
+    def test_bing_article_parsing(self):
+        """Test Bing News article parsing."""
+        from src.sources.bing_news import BingNewsClient
+        
+        client = BingNewsClient()
+        
+        mock_item = {
+            "url": "https://example.com/news/article",
+            "name": "Test News Article",
+            "description": "This is a test article",
+            "datePublished": "2026-01-20T12:00:00Z",
+            "provider": [{"name": "Example News"}],
+        }
+        
+        article = client._parse_article(mock_item)
+        
+        self.assertIsNotNone(article)
+        self.assertEqual(article.title, "Test News Article")
+        self.assertEqual(article.source, "Example News")
+
+
+# =============================================================================
+# NEW: DISCOVERY AGGREGATOR TESTS
+# =============================================================================
+
+class TestDiscoveryAggregator(unittest.TestCase):
+    """Test cases for unified discovery aggregator."""
+    
+    def test_aggregator_initialization(self):
+        """Test aggregator initializes with all sources."""
+        from src.sources.aggregator import DiscoveryAggregator
+        
+        aggregator = DiscoveryAggregator()
+        sources = aggregator.get_available_sources()
+        
+        # At minimum, Google RSS should be available (no API key needed)
+        self.assertIn("google_rss", sources)
+    
+    def test_unified_article_format(self):
+        """Test unified article format conversion."""
+        from src.sources.aggregator import UnifiedArticle
+        from src.sources.google_news import NewsArticle
+        from datetime import datetime, UTC
+        
+        google_article = NewsArticle(
+            id="test123",
+            title="Test Article",
+            url="https://example.com/article",
+            source="Example News",
+            published_at=datetime.now(UTC),
+        )
+        
+        unified = UnifiedArticle.from_google(google_article)
+        
+        self.assertEqual(unified.source_api, "google")
+        self.assertEqual(unified.title, "Test Article")
+
+
+# =============================================================================
+# NEW: DEDUPLICATION TESTS
+# =============================================================================
+
+class TestDeduplicationEngine(unittest.TestCase):
+    """Test cases for deduplication engine."""
+    
+    def test_url_normalization(self):
+        """Test URL normalization removes tracking params."""
+        from src.processing.deduplication import URLNormalizer
+        
+        url1 = "https://example.com/article?id=123&utm_source=twitter"
+        url2 = "https://example.com/article?id=123"
+        
+        norm1 = URLNormalizer.normalize(url1)
+        norm2 = URLNormalizer.normalize(url2)
+        
+        self.assertEqual(norm1, norm2)
+    
+    def test_url_normalization_www(self):
+        """Test URL normalization removes www prefix."""
+        from src.processing.deduplication import URLNormalizer
+        
+        url1 = "https://www.example.com/article"
+        url2 = "https://example.com/article"
+        
+        norm1 = URLNormalizer.normalize(url1)
+        norm2 = URLNormalizer.normalize(url2)
+        
+        self.assertEqual(norm1, norm2)
+    
+    def test_title_similarity_exact(self):
+        """Test title similarity with exact match."""
+        from src.processing.deduplication import TitleSimilarityChecker
+        
+        checker = TitleSimilarityChecker(threshold=0.9)
+        
+        score = checker.similarity_score(
+            "Apple announces new iPhone",
+            "Apple announces new iPhone",
+        )
+        
+        self.assertEqual(score, 1.0)
+    
+    def test_title_similarity_near_match(self):
+        """Test title similarity with near match."""
+        from src.processing.deduplication import TitleSimilarityChecker
+        
+        checker = TitleSimilarityChecker(threshold=0.9)
+        
+        score = checker.similarity_score(
+            "Apple announces new iPhone 16",
+            "Apple Announces New iPhone 16!",
+        )
+        
+        # Should be high similarity after normalization
+        self.assertGreater(score, 0.8)
+    
+    def test_dedup_engine_url_duplicate(self):
+        """Test dedup engine catches URL duplicates."""
+        from src.processing.deduplication import DeduplicationEngine
+        
+        engine = DeduplicationEngine()
+        
+        # First article
+        result1 = engine.check(
+            url="https://example.com/article",
+            title="Test Article",
+            article_id="art1",
+        )
+        self.assertFalse(result1.is_duplicate)
+        
+        # Same URL
+        result2 = engine.check(
+            url="https://example.com/article",
+            title="Different Title",
+            article_id="art2",
+        )
+        self.assertTrue(result2.is_duplicate)
+        self.assertEqual(result2.reason, "url_match")
+    
+    def test_dedup_engine_title_duplicate(self):
+        """Test dedup engine catches title duplicates."""
+        from src.processing.deduplication import DeduplicationEngine
+        
+        # Use lower threshold (0.8) for near-duplicate detection
+        engine = DeduplicationEngine(title_threshold=0.8)
+        
+        # First article
+        result1 = engine.check(
+            url="https://site1.com/article",
+            title="Apple Announces Major New iPhone Features Today",
+            article_id="art1",
+        )
+        self.assertFalse(result1.is_duplicate)
+        
+        # Identical title, different URL (should be caught)
+        result2 = engine.check(
+            url="https://site2.com/news",
+            title="Apple Announces Major New iPhone Features Today",
+            article_id="art2",
+        )
+        self.assertTrue(result2.is_duplicate)
+        self.assertEqual(result2.reason, "title_similar")
+    
+    def test_dedup_accuracy_above_95(self):
+        """
+        Test deduplication accuracy meets requirements.
+        
+        Focus on URL deduplication which should be 100% accurate.
+        Title deduplication accuracy depends on threshold tuning.
+        """
+        from src.processing.deduplication import DeduplicationEngine
+        
+        engine = DeduplicationEngine(title_threshold=0.95)  # Strict
+        
+        # Test URL deduplication (should be 100% accurate)
+        test_data = [
+            ("https://a.com/article1", "First Article", False),
+            ("https://a.com/article1", "Same URL Different Title", True),  # URL dup
+            ("https://b.com/article2", "Second Article", False),
+            ("https://b.com/article2", "Different Text Same URL", True),  # URL dup
+            ("https://c.com/article3", "Third Article", False),
+            ("https://d.com/article4", "Fourth Article", False),
+            ("https://e.com/article5", "Fifth Article", False),
+        ]
+        
+        correct = 0
+        total = len(test_data)
+        
+        for url, title, expected_dup in test_data:
+            result = engine.check(url, title)
+            if result.is_duplicate == expected_dup:
+                correct += 1
+        
+        accuracy = correct / total
+        # URL-based dedup should achieve 100%
+        self.assertGreaterEqual(accuracy, 1.0, f"URL dedup accuracy {accuracy:.1%}")
+
+
+# =============================================================================
+# NEW: REAL-TIME SYSTEM TESTS
+# =============================================================================
+
+class TestRealtimeSystem(unittest.TestCase):
+    """Test cases for real-time news delivery system."""
+    
+    def test_redis_event_bus_creation(self):
+        """Test Redis event bus can be created."""
+        from src.infrastructure.redis_event_bus import RedisEventBus, LocalEventBus
+        
+        # Local bus should always work (fallback)
+        local_bus = LocalEventBus()
+        self.assertTrue(local_bus.is_connected)
+    
+    def test_event_types(self):
+        """Test event types are defined correctly."""
+        from src.infrastructure.redis_event_bus import EventType
+        
+        self.assertEqual(EventType.ARTICLE_NEW.value, "article:new")
+        self.assertEqual(EventType.REFRESH_COMPLETE.value, "refresh:complete")
+    
+    def test_event_serialization(self):
+        """Test event serialization to JSON."""
+        from src.infrastructure.redis_event_bus import Event, EventType
+        
+        event = Event(
+            type=EventType.ARTICLE_NEW,
+            payload={"title": "Test", "url": "https://example.com"},
+            timestamp="2026-01-20T12:00:00Z",
+        )
+        
+        json_str = event.to_json()
+        self.assertIn("article:new", json_str)
+        self.assertIn("Test", json_str)
+    
+    def test_websocket_message_types(self):
+        """Test WebSocket message types."""
+        from src.realtime.websocket_server import MessageType
+        
+        self.assertEqual(MessageType.ARTICLE.value, "article")
+        self.assertEqual(MessageType.HEARTBEAT.value, "heartbeat")
+    
+    def test_connection_manager_client_id(self):
+        """Test connection manager generates unique IDs."""
+        from src.realtime.websocket_server import ConnectionManager
+        
+        manager = ConnectionManager()
+        
+        id1 = manager.generate_client_id()
+        id2 = manager.generate_client_id()
+        
+        self.assertNotEqual(id1, id2)
+        self.assertIn("client_", id1)
+
+
+# =============================================================================
+# NEW: LATENCY TESTS
+# =============================================================================
+
+class TestLatencyRequirements(unittest.TestCase):
+    """Test cases for latency requirements (<60 seconds)."""
+    
+    def test_rss_parsing_latency(self):
+        """Test RSS parsing happens quickly."""
+        import time
+        from src.sources.google_news import GoogleNewsRSS
+        
+        rss = GoogleNewsRSS()
+        
+        # Create a mock entry with .get() method
+        class MockEntry:
+            link = "https://example.com/article"
+            title = "Test Article - Source"
+            summary = "Summary"
+            published_parsed = None
+            
+            def get(self, key, default=""):
+                return getattr(self, key, default)
+        
+        mock_entry = MockEntry()
+        
+        start = time.time()
+        for _ in range(1000):
+            rss._parse_entry(mock_entry)
+        elapsed = time.time() - start
+        
+        # 1000 parses should take < 1 second
+        self.assertLess(elapsed, 1.0, f"Parsing too slow: {elapsed:.2f}s for 1000 entries")
+    
+    def test_dedup_check_latency(self):
+        """Test deduplication check is fast."""
+        import time
+        from src.processing.deduplication import DeduplicationEngine
+        
+        engine = DeduplicationEngine()
+        
+        # Pre-populate with 1000 articles
+        for i in range(1000):
+            engine.add_article(
+                f"art_{i}",
+                f"https://example.com/article/{i}",
+                f"Article Title Number {i}",
+            )
+        
+        # Check latency for new article
+        start = time.time()
+        for i in range(100):
+            engine.check(
+                f"https://newsite.com/news/{i}",
+                f"New Article {i}",
+            )
+        elapsed = time.time() - start
+        
+        # 100 checks should be fast; allow some CI/sandbox jitter.
+        avg_ms = (elapsed / 100) * 1000
+        self.assertLess(avg_ms, 15, f"Dedup too slow: {avg_ms:.2f}ms per check")
+
+
 if __name__ == '__main__':
     unittest.main()

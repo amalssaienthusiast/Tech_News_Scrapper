@@ -1,0 +1,10 @@
+/Users/sci_coderamalamicia/PROJECTS/tech_news_scraper/src/bypass/target/release/deps/idna-2a6f4ef93beb654a.d: /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/lib.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/punycode.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46_mapping_table.rs
+
+/Users/sci_coderamalamicia/PROJECTS/tech_news_scraper/src/bypass/target/release/deps/libidna-2a6f4ef93beb654a.rlib: /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/lib.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/punycode.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46_mapping_table.rs
+
+/Users/sci_coderamalamicia/PROJECTS/tech_news_scraper/src/bypass/target/release/deps/libidna-2a6f4ef93beb654a.rmeta: /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/lib.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/punycode.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46_mapping_table.rs
+
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/lib.rs:
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/punycode.rs:
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46.rs:
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-0.3.0/src/uts46_mapping_table.rs:

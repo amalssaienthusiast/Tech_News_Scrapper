@@ -8,7 +8,7 @@ Python's typing best practices and interface segregation principle.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import Enum, auto
 from typing import (
     Any,
@@ -151,7 +151,7 @@ class Article:
     source: str
     source_tier: SourceTier
     published_at: Optional[datetime] = None
-    scraped_at: datetime = field(default_factory=datetime.utcnow)
+    scraped_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     tech_score: Optional[TechScore] = None
     entities: Dict[str, List[str]] = field(default_factory=dict)
     keywords: Tuple[str, ...] = field(default_factory=tuple)

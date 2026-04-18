@@ -33,11 +33,31 @@ from config.settings import (
     RETRY_DELAY,
     SOURCE_SCRAPE_DELAY,
     USER_AGENT,
+    ENABLE_ANTI_BOT_BYPASS,
+    ENABLE_PAYWALL_BYPASS,
+    MAX_BYPASS_RETRIES,
+    PROXY_ENABLED,
+    PROXY_LIST,
+    USE_BROWSER_AUTOMATION,
 )
 from src.ai_processor import summarize_text
 from src.content_extractor import ContentExtractor
 from src.database import Database
 from src.rate_limiter import RateLimiter
+
+# Bypass module imports (optional features)
+try:
+    from src.bypass import (
+        AntiBotBypass, 
+        PaywallBypass, 
+        StealthConfig, 
+        ProxyManager,
+        ContentPlatformBypass,
+        ContentPlatform,
+    )
+    BYPASS_AVAILABLE = True
+except ImportError:
+    BYPASS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +112,34 @@ class TechNewsScraper:
             if src['url'] not in {s['url'] for s in self.sources}:
                 self.sources.append(src)
         
+        # Initialize bypass handlers if available
+        self.anti_bot: Optional["AntiBotBypass"] = None
+        self.paywall_bypass: Optional["PaywallBypass"] = None
+        self.content_platform_bypass: Optional["ContentPlatformBypass"] = None
+        self.proxy_manager: Optional["ProxyManager"] = None
+        self.bypass_enabled = False
+        
+        if BYPASS_AVAILABLE:
+            if ENABLE_ANTI_BOT_BYPASS:
+                self.anti_bot = AntiBotBypass(max_retries=MAX_BYPASS_RETRIES)
+                logger.info("Anti-bot bypass handler initialized")
+            
+            if ENABLE_PAYWALL_BYPASS:
+                self.paywall_bypass = PaywallBypass()
+                self.content_platform_bypass = ContentPlatformBypass()
+                logger.info("Paywall bypass handler initialized")
+                logger.info("Content platform bypass handler initialized (Medium, Substack, Ghost)")
+            
+            if PROXY_ENABLED and PROXY_LIST:
+                self.proxy_manager = ProxyManager()
+                self.proxy_manager.add_proxies_from_list(PROXY_LIST)
+                logger.info(f"Proxy manager initialized with {len(PROXY_LIST)} proxies")
+            
+            self.bypass_enabled = True
+        
         logger.info(f"TechNewsScraper initialized with {len(self.sources)} sources")
+        if self.bypass_enabled:
+            logger.info("Bypass features enabled")
     
     async def _fetch_url_async(
         self,
@@ -144,6 +191,72 @@ class TechNewsScraper:
                 await asyncio.sleep(delay)
                 delay *= 2
         
+        # Regular fetch failed - try bypass if enabled
+        if self.bypass_enabled and self.anti_bot:
+            logger.info(f"Regular fetch failed, attempting anti-bot bypass for {url}")
+            result = await self.anti_bot.fetch_with_bypass(url)
+            if result.success:
+                return result.content
+        
+        return None
+    
+    async def _fetch_url_with_bypass_async(
+        self,
+        url: str,
+        try_paywall_bypass: bool = True
+    ) -> Optional[str]:
+        """
+        Fetch URL with anti-bot and paywall bypass.
+        
+        This method attempts multiple bypass strategies:
+        1. Content platform bypass for Medium/Substack/Ghost (Playwright-first)
+        2. Regular fetch with stealth headers
+        3. Anti-bot bypass if blocked
+        4. Paywall bypass if paywalled
+        
+        Args:
+            url: URL to fetch.
+            try_paywall_bypass: Whether to attempt paywall bypass.
+        
+        Returns:
+            Response text if successful, None otherwise.
+        """
+        if not self.bypass_enabled:
+            # Fall back to regular fetch
+            async with aiohttp.ClientSession(
+                headers={"User-Agent": USER_AGENT}
+            ) as session:
+                return await self._fetch_url_async(session, url)
+        
+        # Try content platform bypass first for known platforms (Medium, Substack, etc.)
+        if try_paywall_bypass and self.content_platform_bypass:
+            platform = self.content_platform_bypass.detect_platform(url)
+            if platform != ContentPlatform.UNKNOWN:
+                logger.info(f"Detected {platform.value} platform, using content platform bypass for {url}")
+                result = await self.content_platform_bypass.bypass(url, strategy="auto")
+                if result.success:
+                    logger.info(f"Content platform bypass successful: {result.content_length} chars")
+                    return result.content
+                else:
+                    logger.warning(f"Content platform bypass failed: {result.error}")
+        
+        # Try anti-bot bypass 
+        if self.anti_bot:
+            result = await self.anti_bot.fetch_with_bypass(url)
+            
+            if result.success:
+                content = result.content
+                
+                # Check for paywall
+                if try_paywall_bypass and self.paywall_bypass:
+                    if self.paywall_bypass.detect_paywall(content):
+                        logger.info(f"Paywall detected, attempting bypass for {url}")
+                        paywall_result = await self.paywall_bypass.bypass_paywall(url)
+                        if paywall_result.success:
+                            return paywall_result.content
+                
+                return content
+        
         return None
     
     async def get_full_article_and_summarize_async(
@@ -172,7 +285,7 @@ class TechNewsScraper:
             full_content = ContentExtractor.extract_text(soup)
             
             # AI summarization is CPU-bound, run in thread pool
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             ai_summary = await loop.run_in_executor(
                 None, summarize_text, full_content
             )
@@ -681,14 +794,11 @@ class TechNewsScraper:
             Total number of new articles found.
         """
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Already in async context, use sync fallback
-                return self._run_scrape_cycle_sync()
-            else:
-                return loop.run_until_complete(self.run_scrape_cycle_async())
+            asyncio.get_running_loop()
+            # Already inside a running event loop — use sync fallback
+            return self._run_scrape_cycle_sync()
         except RuntimeError:
-            # No event loop, create new one
+            # No running loop — safe to call asyncio.run()
             return asyncio.run(self.run_scrape_cycle_async())
     
     def _run_scrape_cycle_sync(self) -> int:

@@ -1,0 +1,10 @@
+/Users/sci_coderamalamicia/PROJECTS/tech_news_scraper/src/bypass/target/release/deps/ppv_lite86-5b392f1bb9eb44ca.d: /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs
+
+/Users/sci_coderamalamicia/PROJECTS/tech_news_scraper/src/bypass/target/release/deps/libppv_lite86-5b392f1bb9eb44ca.rlib: /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs
+
+/Users/sci_coderamalamicia/PROJECTS/tech_news_scraper/src/bypass/target/release/deps/libppv_lite86-5b392f1bb9eb44ca.rmeta: /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs /Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs
+
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs:
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs:
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs:
+/Users/sci_coderamalamicia/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs:

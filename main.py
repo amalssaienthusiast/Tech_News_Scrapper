@@ -1,382 +1,181 @@
-"""
-Main application entry point for the Tech News Scraper.
-
-This module provides the main orchestration layer for the tech news
-scraper, coordinating database, scraper, discovery, and AI components
-into a unified agent interface.
-"""
 
 import asyncio
+import json
 import logging
-import logging.handlers
-import queue
-import threading
-import time
-from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional, Tuple
+import signal
+import sys
+import uvicorn
+from multiprocessing import Process
 
-from config.settings import (
-    CHECK_INTERVAL,
-    GLOBAL_TOPICS,
-    LOG_FORMAT,
-    LOG_LEVEL,
-    LOGS_DIR,
-)
-from src.ai_processor import (
-    build_search_index,
-    initialize_ai_models,
-    semantic_search,
-)
-from src.database import Database
-from src.discovery import WebDiscoveryAgent
-from src.scraper import TechNewsScraper
+from config.config import load_config
+from src.scrapers.factory import ScraperFactory
+from src.scheduler.task_scheduler import ScraperScheduler
+from src.feed_generator.live_feed import LiveFeedGenerator
+from src.db_storage.db_handler import DatabaseHandler
 
-# Set up logging
-logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
-    format=LOG_FORMAT,
-    handlers=[
-        logging.FileHandler(LOGS_DIR / 'tech_agent.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
-
-
-class TechNewsAgent:
-    """
-    Main application class that coordinates all components.
+class RealTimeNewsAggregator:
+    """Main application class"""
     
-    The TechNewsAgent serves as the central orchestrator, providing
-    a unified interface to the database, scraper, discovery, and
-    AI processing components.
-    
-    Attributes:
-        db: Database instance for article and source storage.
-        scraper: Scraper instance for fetching articles.
-        discovery_agent: Discovery agent for finding new sources.
-        ai_available: Whether AI models are successfully loaded.
-        article_embeddings: Cached embeddings for semantic search.
-    
-    Example:
-        agent = TechNewsAgent()
+    def __init__(self):
+        self.config = load_config()
+        self.scrapers = []
+        self.scheduler = None
+        self.feed_generator = LiveFeedGenerator()
+        self.db_handler = DatabaseHandler()
+        self.logger = logging.getLogger('aggregator')
         
-        # Run scraping cycle
-        new_articles = agent.run_scrape_cycle()
+    async def initialize(self):
+        """Initialize the aggregator"""
+        self.logger.info("Initializing Real-Time News Aggregator")
         
-        # Search articles
-        results = agent.search("artificial intelligence", top_k=5)
-    """
-    
-    def __init__(self, log_queue: Optional[queue.Queue] = None) -> None:
-        """
-        Initialize the Tech News Agent.
+        # Load scrapers from config
+        self.scrapers = await self._create_scrapers()
         
-        Args:
-            log_queue: Optional queue for GUI log forwarding.
-        """
+        # Initialize scheduler
+        max_concurrent = self.config['general']['max_concurrent_scrapers']
+        self.scheduler = ScraperScheduler(self.scrapers, max_concurrent)
+        
         # Initialize database
-        self.db = Database()
+        await self.db_handler.initialize()
         
-        # Initialize scraper
-        self.scraper = TechNewsScraper(self.db)
-        
-        # Initialize discovery agent
-        self.discovery_agent = WebDiscoveryAgent(self.db)
-        
-        # Initialize AI models
-        self.ai_available = initialize_ai_models()
-        
-        # Search index
-        self.article_embeddings: Any = None
-        
-        # Set up logging to queue if provided
-        if log_queue:
-            self.log_queue = log_queue
-            queue_handler = logging.handlers.QueueHandler(log_queue)
-            queue_handler.setFormatter(logging.Formatter(LOG_FORMAT))
-            logger.addHandler(queue_handler)
-        
-        # Build initial search index
-        self.build_search_index()
-        
-        logger.info("Tech News Agent initialized successfully")
+        self.logger.info(f"Initialized {len(self.scrapers)} scrapers")
     
-    def build_search_index(self) -> None:
-        """
-        Build semantic search index from articles.
+    async def _create_scrapers(self) -> list:
+        """Create scraper instances from config"""
+        scrapers = []
+        factory = ScraperFactory()
         
-        Creates embeddings for all articles in the database for
-        efficient semantic search. Skips if AI models unavailable.
-        """
-        if not self.ai_available:
-            logger.warning(
-                "AI models not available. Search functionality limited."
-            )
-            return
+        for source_config in self.config['sources']:
+            if source_config.get('enabled', True):
+                scraper = factory.create_scraper(source_config)
+                if scraper:
+                    scrapers.append(scraper)
         
-        self.article_embeddings = build_search_index(self.db.articles)
+        return scrapers
     
-    def search(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
-        """
-        Semantic search for articles.
+    async def run_continuous(self):
+        """Run aggregator continuously"""
+        self.logger.info("Starting continuous aggregation")
         
-        Args:
-            query: Search query string.
-            top_k: Number of results to return.
+        # Start scheduler
+        scheduler_task = asyncio.create_task(self.scheduler.start())
         
-        Returns:
-            List of result dicts with 'score' and 'article' keys.
-        """
-        if not self.ai_available or self.article_embeddings is None:
-            logger.error("Search functionality not available.")
-            return []
+        # Run feed generation every 30 seconds
+        while True:
+            try:
+                # Get latest articles from all scrapers (from scheduler or direct request?)
+                # Scheduler runs them in background and stores results? 
+                # Actually base `run_once` collects results. 
+                # The scheduler runs tasks periodically, but where do results go?
+                # In current implementation `task_scheduler._run_scraper_task` returns articles,
+                # but `start` ignores return values.
+                # We need to bridge this. The scheduler should probably trigger a callback or we manually run once here.
+                # For this implementation, let's keep it simple: `run_once` gathers everything manually in this loop
+                # OR refine scheduler to store results.
+                # Let's use `run_once` here for periodic aggregation instead of purely background scheduling for simplicity and control.
+                
+                # If using scheduler.start(), we need a way to collect results.
+                # Let's skip scheduler.start() and control loop manually or trust run_once.
+                
+                articles_by_source = await self.scheduler.run_once()
+                
+                # Generate live feed
+                all_articles = []
+                for source_articles in articles_by_source.values():
+                     all_articles.extend(source_articles)
+                
+                if all_articles:
+                    feed = await self.feed_generator.generate_feed([all_articles])
+                    
+                    # Store in database
+                    await self.db_handler.store_feed(feed)
+                    
+                    # Log statistics
+                    self._log_statistics(feed, articles_by_source)
+                
+                # Wait before next cycle
+                # This effectively overrides per-scraper refresh rate in config for a global cycle 
+                # but simplifies data collection.
+                await asyncio.sleep(30)
+                
+            except asyncio.CancelledError:
+                 break
+            except Exception as e:
+                self.logger.error(f"Error in main loop: {str(e)}")
+                await asyncio.sleep(60)
         
-        return semantic_search(
-            query, 
-            self.article_embeddings, 
-            self.db.articles, 
-            top_k
+        # Cleanup
+        await self.shutdown()
+    
+    async def _log_statistics(self, feed: dict, articles_by_source: dict):
+        """Log scraping statistics"""
+        total_articles = sum(len(articles) for articles in articles_by_source.values())
+        unique_articles = len(feed['articles'])
+        
+        self.logger.info(
+            f"Statistics - Total: {total_articles}, "
+            f"Unique: {unique_articles}, "
+            f"Sources: {len(articles_by_source)}"
         )
     
-    def run_scrape_cycle(self) -> int:
-        """
-        Run a complete scraping cycle.
+    async def shutdown(self):
+        """Shutdown gracefully"""
+        self.logger.info("Shutting down...")
         
-        Returns:
-            Number of new articles found.
-        """
-        new_articles = self.scraper.run_scrape_cycle()
-        if new_articles > 0:
-            self.build_search_index()
-        return new_articles
-    
-    async def run_scrape_cycle_async(self) -> int:
-        """
-        Run a complete async scraping cycle.
+        if self.scheduler:
+            self.scheduler.stop()
         
-        Returns:
-            Number of new articles found.
-        """
-        new_articles = await self.scraper.run_scrape_cycle_async()
-        if new_articles > 0:
-            self.build_search_index()
-        return new_articles
-    
-    def discover_new_sources(self, max_new: int = 3) -> List[Dict[str, Any]]:
-        """
-        Discover new sources.
+        # Close all scraper sessions
+        for scraper in self.scrapers:
+            await scraper.close()
         
-        Args:
-            max_new: Maximum number of new sources to discover.
+        # Close database
+        await self.db_handler.close()
         
-        Returns:
-            List of newly discovered source dictionaries.
-        """
-        return self.discovery_agent.discover_new_sources(max_new_sources=max_new)
-    
-    def process_single_url(
-        self, 
-        url: str
-    ) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
-        """
-        Process a single URL.
-        
-        Args:
-            url: URL to process.
-        
-        Returns:
-            Tuple of (success, message, article_dict).
-        """
-        result = self.scraper.process_single_url(url)
-        if result[0]:  # If successful
-            self.build_search_index()
-        return result
-    
-    def search_and_scrape_web(self, query: str) -> Tuple[int, int]:
-        """
-        Search and scrape web for a topic.
-        
-        Args:
-            query: Search topic.
-        
-        Returns:
-            Tuple of (num_sources, num_articles).
-        """
-        result = self.scraper.search_and_scrape_web(query)
-        if result[1] > 0:  # If new articles found
-            self.build_search_index()
-        return result
-    
-    def auto_discovery_cycle(self) -> Tuple[str, int, int]:
-        """
-        Autonomous discovery cycle.
-        
-        Randomly selects a global topic and searches for sources/articles.
-        
-        Returns:
-            Tuple of (topic, num_sources, num_articles).
-        """
-        import random
-        topic = random.choice(GLOBAL_TOPICS)
-        logger.info(f"🤖 Auto-Discovery: Selected topic '{topic}'")
-        
-        num_sources, num_articles = self.search_and_scrape_web(topic)
-        
-        return topic, num_sources, num_articles
-    
-    def get_source_stats(self) -> Dict[str, int]:
-        """
-        Get source statistics.
-        
-        Returns:
-            Dictionary with source and article counts.
-        """
-        return self.scraper.get_source_stats()
-    
-    def get_latest_articles(self, count: int = 5) -> List[Dict[str, Any]]:
-        """
-        Get latest articles.
-        
-        Args:
-            count: Number of articles to return.
-        
-        Returns:
-            List of article dictionaries.
-        """
-        return self.scraper.get_latest_articles(count)
-    
-    def save_url_to_txt(self, url: str) -> Optional[str]:
-        """
-        Save URL content to text file.
-        
-        Args:
-            url: URL to save.
-        
-        Returns:
-            Path to saved file if successful.
-        """
-        return self.scraper.save_url_to_txt(url)
+        self.logger.info("Shutdown complete")
 
+def run_api():
+    """Run FastAPI server"""
+    uvicorn.run("src.api.app:app", host="0.0.0.0", port=8000, reload=False)
 
-async def daemon_loop_async(
-    agent: TechNewsAgent, 
-    auto_discovery: bool = True
-) -> None:
-    """
-    Async background daemon loop for periodic scraping.
-    
-    Args:
-        agent: TechNewsAgent instance.
-        auto_discovery: Enable auto-discovery of new sources.
-    """
-    while True:
-        try:
-            # Regular scrape cycle
-            logger.info("🤖 Daemon: Starting async scrape cycle...")
-            await agent.run_scrape_cycle_async()
-            
-            # Auto-discovery cycle if enabled
-            if auto_discovery:
-                logger.info("🤖 Daemon: Starting Auto-Discovery...")
-                try:
-                    topic, sources, articles = agent.auto_discovery_cycle()
-                    if sources > 0:
-                        logger.info(
-                            f"✨ Auto-Discovery: Found {sources} sources "
-                            f"for '{topic}'"
-                        )
-                    else:
-                        logger.info(
-                            f"🤖 Auto-Discovery: No new sources for '{topic}'"
-                        )
-                except Exception as e:
-                    logger.error(f"⚠️ Auto-Discovery Error: {e}")
-            
-            logger.info(
-                f"✓ Daemon: Cycle finished. Next run in {CHECK_INTERVAL}s"
-            )
-            await asyncio.sleep(CHECK_INTERVAL)
-            
-        except Exception as e:
-            logger.error(f"Error in async daemon loop: {e}")
-            await asyncio.sleep(60)
-
-
-def daemon_loop(agent: TechNewsAgent, auto_discovery: bool = True) -> None:
-    """
-    Background daemon loop for periodic scraping (sync version).
-    
-    Args:
-        agent: TechNewsAgent instance.
-        auto_discovery: Enable auto-discovery of new sources.
-    """
-    while True:
-        try:
-            # Regular scrape cycle
-            logger.info("🤖 Daemon: Starting automatic scrape cycle...")
-            agent.run_scrape_cycle()
-            
-            # Auto-discovery cycle if enabled
-            if auto_discovery:
-                logger.info("🤖 Daemon: Starting Auto-Discovery...")
-                try:
-                    topic, sources, articles = agent.auto_discovery_cycle()
-                    if sources > 0:
-                        logger.info(
-                            f"✨ Auto-Discovery: Found {sources} sources "
-                            f"for '{topic}'"
-                        )
-                    else:
-                        logger.info(
-                            f"🤖 Auto-Discovery: No new sources for '{topic}'"
-                        )
-                except Exception as e:
-                    logger.error(f"⚠️ Auto-Discovery Error: {e}")
-            
-            logger.info(
-                f"✓ Daemon: Cycle finished. Next run in {CHECK_INTERVAL}s"
-            )
-            time.sleep(CHECK_INTERVAL)
-            
-        except Exception as e:
-            logger.error(f"Error in daemon loop: {e}")
-            time.sleep(60)
-
-
-def main() -> None:
-    """Main entry point for CLI mode."""
-    # Initialize agent
-    agent = TechNewsAgent()
-    
-    # Start daemon thread
-    daemon_thread = threading.Thread(
-        target=daemon_loop,
-        args=(agent, True),
-        daemon=True
+async def main():
+    """Main function"""
+    # Setup logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('news_aggregator.log'),
+            logging.StreamHandler()
+        ]
     )
-    daemon_thread.start()
     
-    logger.info("Tech News Agent started successfully")
+    # Start API in separate process (or task if using uvicorn programmatically async, but process is safer for blocking)
+    api_process = Process(target=run_api)
+    api_process.start()
+    
+    aggregator = RealTimeNewsAggregator()
+    
+    # Setup signal handlers
+    loop = asyncio.get_running_loop()
+    
+    def handle_signal():
+        asyncio.create_task(aggregator.shutdown())
+        api_process.terminate()
+        
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, handle_signal)
     
     try:
-        # Keep main thread alive
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        logger.info("Shutting down Tech News Agent...")
-
-
-async def main_async() -> None:
-    """Main entry point for fully async mode."""
-    agent = TechNewsAgent()
-    logger.info("Tech News Agent started in async mode")
-    
-    try:
-        await daemon_loop_async(agent, auto_discovery=True)
-    except KeyboardInterrupt:
-        logger.info("Shutting down Tech News Agent...")
-
+        await aggregator.initialize()
+        await aggregator.run_continuous()
+    except Exception as e:
+        aggregator.logger.error(f"Fatal error: {str(e)}")
+        await aggregator.shutdown()
+        api_process.terminate()
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

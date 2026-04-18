@@ -9,7 +9,6 @@ A CPU-Z style terminal interface with:
 """
 
 import asyncio
-import os
 import sys
 import time
 from datetime import datetime
@@ -31,21 +30,27 @@ try:
     from rich.prompt import Prompt
     from rich import box
 except ImportError:
-    print("Installing rich library...")
-    os.system(f"{sys.executable} -m pip install rich")
-    from rich.console import Console
-    from rich.layout import Layout
-    from rich.live import Live
-    from rich.panel import Panel
-    from rich.table import Table
-    from rich.text import Text
-    from rich.progress import Progress, SpinnerColumn, TextColumn
-    from rich.prompt import Prompt
-    from rich import box
+    raise SystemExit(
+        "Missing dependency 'rich'. Install project dependencies first with "
+        "'pip install -r requirements.txt'."
+    )
 
 from src.engine import TechNewsOrchestrator, SearchResult
 from src.core import NonTechQueryError, InvalidQueryError
 from src.core.types import Article
+
+# Import bypass module for protected content
+try:
+    from src.bypass import AntiBotBypass, PaywallBypass, ContentPlatformBypass, ContentPlatform
+    BYPASS_AVAILABLE = True
+except ImportError:
+    BYPASS_AVAILABLE = False
+
+# Import Markdown for rich formatting
+try:
+    from rich.markdown import Markdown
+except ImportError:
+    Markdown = None
 
 console = Console()
 
@@ -392,11 +397,15 @@ async def interactive_mode():
     console.print(Panel(
         "[bold cyan]Commands:[/]\n"
         "  [cyan]search <query>[/] - Search for tech news\n"
-        "  [cyan]analyze <url>[/]  - Deep analyze a URL\n"
+        "  [cyan]analyze <url>[/]  - Deep analyze a URL with detailed output\n"
+        "  [cyan]url <url>[/]      - Shorthand for analyze\n"
         "  [cyan]auto[/]           - AI auto-discovery\n"
         "  [cyan]stats[/]          - Show statistics\n"
         "  [cyan]latest[/]         - Show latest articles\n"
-        "  [cyan]quit[/]           - Exit\n",
+        "  [cyan]quit[/]           - Exit\n\n"
+        "[bold yellow]Flags:[/]\n"
+        "  [yellow]--bypass[/]       - Force bypass mode for protected URLs\n"
+        "                   Example: analyze https://example.com --bypass",
         title="[bold white]📚 Help[/]",
         box=box.ROUNDED,
     ))
@@ -492,24 +501,129 @@ async def interactive_mode():
                 else:
                     console.print("[dim]No articles yet. Try searching first.[/]")
             
-            elif cmd == "analyze":
+            elif cmd == "analyze" or cmd == "url":
                 if not args:
                     args = Prompt.ask("[dim]Enter URL to analyze[/]")
                 
-                with console.status(f"[bold green]Analyzing: {args}..."):
-                    result = await orchestrator.analyze_url(args)
-                    if result:
-                        console.print(f"\n[bold green]📰 {result.article.title}[/]\n")
-                        console.print(f"[dim]Tech Score: {result.article.tech_score.score:.2f}[/]")
-                        console.print(f"[dim]Sentiment: {result.sentiment}[/]")
-                        console.print(f"[dim]Reading Time: {result.reading_time_min} min[/]\n")
+                # Check for --bypass flag
+                use_bypass = "--bypass" in args
+                url = args.replace("--bypass", "").strip()
+                
+                bypass_used = None
+                content = None
+                
+                with console.status(f"[bold green]Analyzing: {url}..."):
+                    result = None
+                    
+                    # Try normal analysis first
+                    result = await orchestrator.analyze_url(url)
+                    
+                    # If failed and bypass requested/available, try bypass
+                    if (not result or use_bypass) and BYPASS_AVAILABLE:
+                        console.print("[yellow]Attempting bypass...[/]")
                         
+                        # Try content platform bypass first for Medium, Substack, Ghost
+                        content_platform = ContentPlatformBypass()
+                        platform = content_platform.detect_platform(url)
+                        
+                        if platform != ContentPlatform.UNKNOWN:
+                            console.print(f"[cyan]Detected {platform.value} platform, using smart bypass...[/]")
+                            cp_result = await content_platform.bypass(url, strategy="auto")
+                            if cp_result.success:
+                                content = cp_result.content
+                                bypass_used = f"Content Platform ({platform.value})"
+                                console.print(f"[green]✓ Fetched {cp_result.content_length} chars ({cp_result.metadata.get('word_count', 'N/A')} words)[/]")
+                            await content_platform.close()
+                        
+                        # Fall back to generic bypass if content platform bypass failed
+                        if not content:
+                            anti_bot = AntiBotBypass()
+                            paywall = PaywallBypass()
+                            
+                            bypass_result = await anti_bot.fetch_with_bypass(url)
+                            if bypass_result.success:
+                                content = bypass_result.content
+                                bypass_used = f"Anti-bot ({bypass_result.protection_type.value})"
+                                
+                                # Check for paywall
+                                if paywall.detect_paywall(content):
+                                    pw_result = await paywall.bypass_paywall(url)
+                                    if pw_result.success:
+                                        content = pw_result.content
+                                        bypass_used = f"Paywall ({pw_result.method_used.value})"
+                            else:
+                                pw_result = await paywall.bypass_paywall(url)
+                                if pw_result.success:
+                                    content = pw_result.content
+                                    bypass_used = f"Paywall ({pw_result.method_used.value})"
+                        
+                        # Re-try analysis
+                        if content:
+                            result = await orchestrator.analyze_url(url)
+                    
+                    if result:
+                        # Create rich output
+                        score = result.article.tech_score.score if result.article.tech_score else 0
+                        
+                        # Header panel
+                        header_content = f"[bold]{result.article.title}[/bold]"
+                        console.print(Panel(header_content, title="🔗 URL Analysis", 
+                                           border_style="blue", padding=(1, 2)))
+                        
+                        # Meta info table
+                        meta_table = Table(box=box.SIMPLE, show_header=False, padding=(0, 2))
+                        meta_table.add_column(style="cyan")
+                        meta_table.add_column(style="white")
+                        meta_table.add_row("📊 Tech Score", f"[green]{score:.2f}[/]")
+                        meta_table.add_row("📰 Source", result.article.source)
+                        meta_table.add_row("⏱️ Reading Time", f"{result.reading_time_min} min")
+                        meta_table.add_row("💭 Sentiment", result.sentiment.capitalize())
+                        if bypass_used:
+                            meta_table.add_row("🔓 Bypass Used", f"[green]{bypass_used}[/]")
+                        else:
+                            meta_table.add_row("🔓 Bypass", "[dim]Not needed[/]")
+                        
+                        console.print(Panel(meta_table, title="📋 Details", border_style="dim"))
+                        
+                        # Summary
+                        if result.article.summary:
+                            console.print(Panel(result.article.summary, title="📋 AI Summary", 
+                                               border_style="cyan", padding=(1, 2)))
+                        
+                        # Key Points
                         if result.key_points:
-                            console.print("[bold cyan]📌 Key Points:[/]")
-                            for i, point in enumerate(result.key_points[:5], 1):
-                                console.print(f"  {i}. {point.text[:80]}")
+                            kp_content = ""
+                            for i, point in enumerate(result.key_points[:6], 1):
+                                kp_content += f"[cyan]{i}.[/] {point.text}\n"
+                            console.print(Panel(kp_content.strip(), title="📌 Key Points", 
+                                               border_style="yellow"))
+                        
+                        # Entities
+                        if result.entities:
+                            entity_parts = []
+                            if result.entities.companies:
+                                entity_parts.append(f"[bold]🏢 Companies:[/] {', '.join(result.entities.companies[:5])}")
+                            if result.entities.technologies:
+                                entity_parts.append(f"[bold]🔧 Technologies:[/] {', '.join(result.entities.technologies[:5])}")
+                            if hasattr(result.entities, 'people') and result.entities.people:
+                                entity_parts.append(f"[bold]👤 People:[/] {', '.join(result.entities.people[:5])}")
+                            
+                            if entity_parts:
+                                console.print(Panel("\\n".join(entity_parts), title="🏢 Entities", 
+                                                   border_style="magenta"))
+                        
+                        console.print()
+                    elif content:
+                        # Display raw content if analysis failed
+                        console.print(Panel(f"[green]✓ Content retrieved via {bypass_used}[/]", 
+                                           title="🔓 Bypass Success", border_style="green"))
+                        console.print(Panel(content[:15000] + "..." if len(content) > 15000 else content,
+                                           title="📄 Content Preview", border_style="dim"))
                     else:
                         console.print("[red]❌ Could not analyze URL[/]")
+                        if BYPASS_AVAILABLE:
+                            console.print("[yellow]💡 Tip: Use 'analyze <url> --bypass' to force bypass mode[/]")
+            
             
             else:
                 # Treat as search query

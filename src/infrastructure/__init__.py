@@ -1,8 +1,23 @@
 """
-Infrastructure module initialization.
+Infrastructure module for real-time news scraper.
 
-Re-exports database and utilities.
+Provides:
+- Redis-based event bus for pub/sub messaging
+- Message queue integration for distributed workers
 """
 
-# Note: Database and other infrastructure components
-# can be imported from here when needed
+from src.infrastructure.redis_event_bus import (
+    RedisEventBus,
+    LocalEventBus,
+    Event,
+    EventType,
+    create_event_bus,
+)
+
+__all__ = [
+    "RedisEventBus",
+    "LocalEventBus",
+    "Event",
+    "EventType",
+    "create_event_bus",
+]

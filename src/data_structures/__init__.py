@@ -6,6 +6,7 @@ Provides high-performance data structures for the scraper:
 - BloomFilter: Probabilistic URL deduplication
 - LRUCache: Response caching with TTL
 - PriorityQueue: Source ranking
+- ArticlePriorityQueue: Time-sorted article management
 """
 
 from src.data_structures.trie import (
@@ -32,6 +33,12 @@ from src.data_structures.priority_queue import (
     TaskScheduler,
 )
 
+from src.data_structures.article_queue import (
+    ArticlePriorityQueue,
+    ArticleTimeIndex,
+    TimestampedArticle,
+)
+
 __all__ = [
     # Trie
     "Trie",
@@ -49,4 +56,9 @@ __all__ = [
     "PriorityItem",
     "SourcePriorityQueue",
     "TaskScheduler",
+    # Article Queue
+    "ArticlePriorityQueue",
+    "ArticleTimeIndex",
+    "TimestampedArticle",
 ]
+

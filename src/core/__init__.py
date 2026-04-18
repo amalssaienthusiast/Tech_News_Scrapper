@@ -39,7 +39,8 @@ from src.core.exceptions import (
     # Scraping
     ScrapingError,
     InvalidURLError,
-    ConnectionError,
+    ScrapingConnectionError,
+    ConnectionError,  # Alias for backward compatibility
     RateLimitedError,
     ContentExtractionError,
     # Database
@@ -85,7 +86,8 @@ __all__ = [
     "NonTechQueryError",
     "ScrapingError",
     "InvalidURLError",
-    "ConnectionError",
+    "ScrapingConnectionError",
+    "ConnectionError",  # Alias for backward compatibility
     "RateLimitedError",
     "ContentExtractionError",
     "DatabaseError",

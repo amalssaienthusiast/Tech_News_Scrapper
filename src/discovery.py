@@ -753,3 +753,281 @@ class WebDiscoveryAgent:
             logger.info(f"Discovered {len(new_sources)} new sources!")
         
         return new_sources
+    
+    # =========================================================================
+    # TIME-BASED DISCOVERY METHODS
+    # =========================================================================
+    
+    def get_sources_by_freshness(
+        self,
+        max_age_hours: int = 24
+    ) -> List[Dict[str, Any]]:
+        """
+        Get sources sorted by content freshness.
+        
+        Prioritizes sources based on:
+        - Last article timestamp
+        - Historical update frequency
+        - Recent success rate
+        
+        Args:
+            max_age_hours: Maximum age threshold for freshness scoring
+        
+        Returns:
+            List of sources sorted by freshness (freshest first)
+        """
+        sources = list(self.db.discovered_sources)
+        
+        def calculate_freshness_score(source: Dict[str, Any]) -> float:
+            """Calculate freshness score (higher = fresher)."""
+            score = 0.0
+            
+            # Last scraped recency
+            last_scraped = source.get('last_scraped')
+            if last_scraped:
+                try:
+                    if isinstance(last_scraped, str):
+                        from datetime import datetime, UTC
+                        last_scraped = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
+                    
+                    hours_ago = (datetime.now(UTC) - last_scraped).total_seconds() / 3600
+                    
+                    if hours_ago < 1:
+                        score += 1.0
+                    elif hours_ago < 4:
+                        score += 0.8
+                    elif hours_ago < 12:
+                        score += 0.5
+                    elif hours_ago < max_age_hours:
+                        score += 0.3
+                except Exception:
+                    pass
+            
+            # Article count bonus (more articles = more active)
+            article_count = source.get('article_count', 0)
+            if article_count > 100:
+                score += 0.3
+            elif article_count > 50:
+                score += 0.2
+            elif article_count > 10:
+                score += 0.1
+            
+            # Quality score
+            score += source.get('quality_score', 0.0) * 0.3
+            
+            return score
+        
+        # Sort by freshness score
+        sources.sort(key=calculate_freshness_score, reverse=True)
+        
+        return sources
+    
+    async def discover_fresh_articles(
+        self,
+        max_age_hours: int = 4,
+        max_articles: int = 50,
+        sources: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Discover only fresh articles from the last N hours.
+        
+        Uses time-filtered search queries and prioritizes recent content.
+        
+        Args:
+            max_age_hours: Maximum age of articles to discover
+            max_articles: Maximum articles to return
+            sources: Optional list of source URLs to check
+        
+        Returns:
+            List of fresh article dictionaries sorted by timestamp
+        """
+        from datetime import datetime, UTC, timedelta
+        
+        logger.info(f"Discovering fresh articles (last {max_age_hours}h)...")
+        
+        fresh_articles: List[Dict[str, Any]] = []
+        cutoff_time = datetime.now(UTC) - timedelta(hours=max_age_hours)
+        
+        # Time-filtered queries
+        today = datetime.now().strftime('%Y-%m-%d')
+        fresh_queries = [
+            "latest technology news today",
+            f"tech news {today}",
+            "breaking tech news 2025",
+            "new tech announcements today",
+        ]
+        
+        source_urls = sources or [s['url'] for s in self.get_sources_by_freshness()[:10]]
+        
+        async with aiohttp.ClientSession(
+            headers={"User-Agent": USER_AGENT}
+        ) as session:
+            # Fetch and parse sources
+            for source_url in source_urls:
+                if len(fresh_articles) >= max_articles:
+                    break
+                
+                try:
+                    await self.rate_limiter.wait_async(source_url)
+                    
+                    async with session.get(
+                        source_url,
+                        timeout=aiohttp.ClientTimeout(total=10)
+                    ) as response:
+                        if response.status != 200:
+                            continue
+                        
+                        html = await response.text()
+                        soup = BeautifulSoup(html, 'html.parser')
+                        
+                        # Extract articles with timestamps
+                        articles = self._extract_articles_with_time(
+                            soup, source_url, cutoff_time
+                        )
+                        
+                        fresh_articles.extend(articles[:10])
+                        
+                except Exception as e:
+                    logger.warning(f"Error fetching {source_url}: {e}")
+                    continue
+        
+        # Sort by timestamp (newest first)
+        fresh_articles.sort(
+            key=lambda x: x.get('published_at', datetime.min.replace(tzinfo=UTC)),
+            reverse=True
+        )
+        
+        logger.info(f"Found {len(fresh_articles)} fresh articles")
+        return fresh_articles[:max_articles]
+    
+    def _extract_articles_with_time(
+        self,
+        soup: BeautifulSoup,
+        source_url: str,
+        cutoff_time: "datetime"
+    ) -> List[Dict[str, Any]]:
+        """Extract articles with publication timestamps."""
+        from datetime import datetime, UTC, timedelta
+        import re
+        
+        articles = []
+        
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            url = urljoin(source_url, href)
+            
+            # Skip non-article URLs
+            if not self._is_likely_article_url(url):
+                continue
+            
+            title = link.get_text(strip=True)
+            if len(title) < 20:
+                continue
+            
+            # Try to find timestamp
+            timestamp = None
+            parent = link.parent
+            
+            if parent:
+                # Check for time element
+                time_elem = parent.find('time')
+                if time_elem:
+                    dt_str = time_elem.get('datetime') or time_elem.get_text(strip=True)
+                    timestamp = self._parse_timestamp(dt_str)
+                
+                # Try relative time in text
+                if not timestamp:
+                    parent_text = parent.get_text()
+                    timestamp = self._parse_relative_timestamp(parent_text)
+            
+            # Default to now if no timestamp found
+            if not timestamp:
+                timestamp = datetime.now(UTC)
+            
+            # Filter by cutoff
+            if timestamp < cutoff_time:
+                continue
+            
+            articles.append({
+                'url': url,
+                'title': title,
+                'source': urlparse(source_url).netloc,
+                'published_at': timestamp,
+                'discovered_at': datetime.now(UTC).isoformat(),
+            })
+        
+        return articles
+    
+    def _is_likely_article_url(self, url: str) -> bool:
+        """Check if URL is likely an article."""
+        path = urlparse(url).path.lower()
+        
+        # Skip patterns
+        skip = ['/tag/', '/category/', '/author/', '/page/', '/search', 
+                '/login', '/about', '/contact', '.pdf', '.jpg', '.png']
+        
+        for pattern in skip:
+            if pattern in path:
+                return False
+        
+        # Article patterns
+        article = ['/article/', '/news/', '/post/', '/story/', '/blog/',
+                   r'/\d{4}/', '/feature/', '/review/']
+        
+        for pattern in article:
+            if re.search(pattern, path):
+                return True
+        
+        return len(path) > 20
+    
+    def _parse_timestamp(self, date_str: Optional[str]) -> Optional["datetime"]:
+        """Parse timestamp string."""
+        from datetime import datetime, UTC
+        
+        if not date_str:
+            return None
+        
+        formats = [
+            '%Y-%m-%dT%H:%M:%S%z',
+            '%Y-%m-%dT%H:%M:%SZ',
+            '%Y-%m-%d',
+            '%B %d, %Y',
+        ]
+        
+        for fmt in formats:
+            try:
+                dt = datetime.strptime(date_str.strip(), fmt)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=UTC)
+                return dt
+            except ValueError:
+                continue
+        
+        return None
+    
+    def _parse_relative_timestamp(self, text: str) -> Optional["datetime"]:
+        """Parse relative time like '2 hours ago'."""
+        from datetime import datetime, UTC, timedelta
+        import re
+        
+        text_lower = text.lower()
+        now = datetime.now(UTC)
+        
+        patterns = [
+            (r'(\d+)\s*(?:minute|min)s?\s*ago', 'minutes'),
+            (r'(\d+)\s*(?:hour|hr)s?\s*ago', 'hours'),
+            (r'(\d+)\s*days?\s*ago', 'days'),
+        ]
+        
+        for pattern, unit in patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                value = int(match.group(1))
+                if unit == 'minutes':
+                    return now - timedelta(minutes=value)
+                elif unit == 'hours':
+                    return now - timedelta(hours=value)
+                elif unit == 'days':
+                    return now - timedelta(days=value)
+        
+        return None

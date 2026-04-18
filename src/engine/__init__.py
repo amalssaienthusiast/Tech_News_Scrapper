@@ -39,6 +39,11 @@ from src.engine.orchestrator import (
     QUALITY_SOURCES,
 )
 
+from src.engine.enhanced_feeder import (
+    EnhancedRealtimeFeeder,
+    EnhancedNewsPipeline,
+)
+
 __all__ = [
     # Query Engine
     "QueryEngine",
@@ -63,4 +68,7 @@ __all__ = [
     "SearchResult",
     "PREMIUM_SOURCES",
     "QUALITY_SOURCES",
+    # Enhanced Pipeline
+    "EnhancedRealtimeFeeder",
+    "EnhancedNewsPipeline",
 ]

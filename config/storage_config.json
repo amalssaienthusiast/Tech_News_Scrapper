@@ -1,0 +1,6 @@
+{
+  "mode": "persistent",
+  "ttl_seconds": 7200,
+  "max_articles": 1000,
+  "updated_at": "2026-03-09T09:48:15.720912+00:00"
+}

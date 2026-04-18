@@ -7,7 +7,7 @@ contextual information for debugging and user feedback.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import Enum, auto
 from typing import Any, Dict, Optional
 
@@ -68,7 +68,7 @@ class ErrorContext:
         details: Additional context-specific details
         correlation_id: ID for tracing across operations
     """
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     operation: Optional[str] = None
     component: Optional[str] = None
     details: Dict[str, Any] = field(default_factory=dict)
@@ -223,7 +223,7 @@ class InvalidURLError(ScrapingError):
         self.url = url
 
 
-class ConnectionError(ScrapingError):
+class ScrapingConnectionError(ScrapingError):
     """Raised when connection to URL fails."""
     
     def __init__(
@@ -248,6 +248,9 @@ class ConnectionError(ScrapingError):
             **kwargs
         )
         self.url = url
+
+# Alias for backward compatibility (deprecated - use ScrapingConnectionError)
+ConnectionError = ScrapingConnectionError
 
 
 class RateLimitedError(ScrapingError):
